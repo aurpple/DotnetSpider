@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="..\packages\Antlr4.4.3.0\build\Antlr4.props" Condition="Exists('..\packages\Antlr4.4.3.0\build\Antlr4.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B3C85F81-3031-4705-BB60-811810F472EE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Java2Dotnet.Spider.Extension</RootNamespace>
+    <AssemblyName>Java2Dotnet.Spider.Extension</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+    <NuGetPackageImportStamp>7166e2a7</NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Antlr4.Runtime.net45, Version=4.3.0.0, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antlr4.Runtime.4.3.0\lib\net45\Antlr4.Runtime.net45.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Dapper, Version=1.40.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.42\lib\net45\Dapper.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="HtmlAgilityPack, Version=1.4.9.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.4.9\lib\Net45\HtmlAgilityPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="HtmlAgilityPack.CssSelectors, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.CssSelectors.1.0.0\lib\net45\HtmlAgilityPack.CssSelectors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MySql.Data, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.6.9.8\lib\net45\MySql.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ServiceStack.Common, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FreeStack.Redis.4.3.1\lib\ServiceStack.Common.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ServiceStack.Interfaces, Version=4.0.0.0, Culture=neutral, PublicKeyToken=e06fbc6124f57c43, processorArchitecture=MSIL">
+      <HintPath>..\packages\FreeStack.Redis.4.3.1\lib\ServiceStack.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ServiceStack.Redis, Version=4.2.0.5138, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FreeStack.Redis.4.3.1\lib\ServiceStack.Redis.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ServiceStack.Text, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FreeStack.Redis.4.3.1\lib\ServiceStack.Text.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DbSupport\BaseDataProvider.cs" />
+    <Compile Include="DbSupport\DapperDataProviderManager.cs" />
+    <Compile Include="DbSupport\Dapper\Attributes\Deleted.cs" />
+    <Compile Include="DbSupport\Dapper\Attributes\KeyProperty.cs" />
+    <Compile Include="DbSupport\Dapper\Attributes\NonStored.cs" />
+    <Compile Include="DbSupport\Dapper\Attributes\Scheme.cs" />
+    <Compile Include="DbSupport\Dapper\Attributes\StatusProperty.cs" />
+    <Compile Include="DbSupport\Dapper\Attributes\StoredAs.cs" />
+    <Compile Include="DbSupport\Dapper\DataRepository.cs" />
+    <Compile Include="DbSupport\Dapper\IDataRepository.cs" />
+    <Compile Include="DbSupport\Dapper\ISqlGenerator.cs" />
+    <Compile Include="DbSupport\Dapper\MSSqlGenerator.cs" />
+    <Compile Include="DbSupport\Dapper\MySqlGenerator.cs" />
+    <Compile Include="DbSupport\Dapper\PropertyMetadata.cs" />
+    <Compile Include="DbSupport\Dapper\SqlMapperExtention.cs" />
+    <Compile Include="DbSupport\DataSettings.cs" />
+    <Compile Include="DbSupport\DataSettingsManager.cs" />
+    <Compile Include="DbSupport\DbProviderUtil.cs" />
+    <Compile Include="DbSupport\IDataProvider.cs" />
+    <Compile Include="DbSupport\IDataProviderManager.cs" />
+    <Compile Include="DbSupport\MySqlDataProvider.cs" />
+    <Compile Include="DbSupport\SqlServerDataProvider.cs" />
+    <Antlr4 Include="Grammar\CommonLexerRules.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>Java2Dotnet.Spider.Extension.Grammar</CustomToolNamespace>
+    </Antlr4>
+    <Compile Include="Grammar\ModifyScriptVisitor.cs" />
+    <Compile Include="Grammar\ValueConverter.cs" />
+    <Compile Include="Model\Attribute\Column.cs" />
+    <Compile Include="Model\Attribute\ComboExtract.cs" />
+    <Compile Include="Model\Attribute\ExtractBy.cs" />
+    <Compile Include="Model\Attribute\HelpUrl.cs" />
+    <Compile Include="Model\Attribute\Table.cs" />
+    <Compile Include="Model\BaseEntity.cs" />
+    <Compile Include="Model\ExtractSource.cs" />
+    <Compile Include="Model\Formatter\FormatterFactory.cs" />
+    <Compile Include="Model\Formatter\ObjectFormatter.cs" />
+    <Compile Include="Model\Formatter\Types.cs" />
+    <Compile Include="Model\HasKey.cs" />
+    <Compile Include="Monitor\Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Monitor\Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Monitor\RedisStatusUpdater.cs" />
+    <Compile Include="Monitor\SpiderStatus.cs" />
+    <Compile Include="Monitor\ISpiderStatus.cs" />
+    <Compile Include="MultiPageModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scheduler\ISchedulerManager.cs" />
+    <Compile Include="Scheduler\RedisSchedulerManager.cs" />
+    <Compile Include="Scheduler\SpiderStatus.cs" />
+    <Compile Include="Utils\DoubleKeyDictionary.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Pipeline\ISubPipeline.cs" />
+    <Compile Include="Handler\RequestMatcher.cs" />
+    <Compile Include="Processor\SubPageProcessor.cs" />
+    <Compile Include="Handler\PatternRequestMatcher.cs" />
+    <Compile Include="Processor\PatternProcessor.cs" />
+    <Compile Include="Processor\CompositePageProcessor.cs" />
+    <Compile Include="Pipeline\CompositePipeline.cs" />
+    <Compile Include="Configurable\ExtractRule.cs" />
+    <Compile Include="Configurable\ExpressionType.cs" />
+    <Compile Include="Configurable\ConfigurablePageProcessor.cs" />
+    <Compile Include="Downloader\FileCache.cs" />
+    <Compile Include="Scheduler\RedisScheduler.cs" />
+    <Compile Include="Pipeline\IPageModelPipeline.cs" />
+    <Compile Include="Pipeline\MultiPagePipeline.cs" />
+    <Compile Include="Pipeline\JsonFilePipeline.cs" />
+    <Compile Include="Pipeline\JsonFilePageModelPipeline.cs" />
+    <Compile Include="Model\OoSpider.cs" />
+    <Compile Include="Processor\ModelPageProcessor.cs" />
+    <Compile Include="Model\PageModelExtractor.cs" />
+    <Compile Include="Model\Extractor.cs" />
+    <Compile Include="Model\FieldExtractor.cs" />
+    <Compile Include="Utils\ExtractorUtils.cs" />
+    <Compile Include="Model\Attribute\Formatter.cs" />
+    <Compile Include="Model\Attribute\ExtractByUrl.cs" />
+    <Compile Include="Model\Attribute\TargetUrl.cs" />
+    <Compile Include="Model\Formatter\BasicTypeFormatter.cs" />
+    <Compile Include="Model\AfterExtractor.cs" />
+    <Compile Include="Pipeline\ModelPipeline.cs" />
+    <Compile Include="Pipeline\PageModelCollectorPipeline.cs" />
+    <Compile Include="Pipeline\ConsolePageModelPipeline.cs" />
+    <Compile Include="Pipeline\CollectorPageModelToDbPipeline.cs" />
+    <Compile Include="Monitor\SpiderMonitor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Java2Dotnet.SpiderCore\Java2Dotnet.Spider.Core.csproj">
+      <Project>{1d4f80ab-81b0-4e9c-945e-2715a068115c}</Project>
+      <Name>Java2Dotnet.Spider.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Java2Dotnet.SpiderLib\Java2Dotnet.Spider.Lib.csproj">
+      <Project>{7ea772d4-3a2b-4c2a-9537-97f4ebc180c2}</Project>
+      <Name>Java2Dotnet.Spider.Lib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <Antlr4 Include="Grammar\ModifyScript.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>Java2Dotnet.Spider.Extension.Grammar</CustomToolNamespace>
+    </Antlr4>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Monitor\Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+    <Error Condition="!Exists('..\packages\Antlr4.4.3.0\build\Antlr4.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Antlr4.4.3.0\build\Antlr4.props'))" />
+    <Error Condition="!Exists('..\packages\Antlr4.4.3.0\build\Antlr4.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Antlr4.4.3.0\build\Antlr4.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props'))" />
+  </Target>
+  <Import Project="..\packages\Antlr4.4.3.0\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.3.0\build\Antlr4.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
