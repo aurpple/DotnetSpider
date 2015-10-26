@@ -22,7 +22,7 @@ namespace Java2Dotnet.Spider.Extension.Test
 				lexer.Reset();
 				tokens.Reset();
 
-				ModifyScriptVisitor tableColumnVisitor = new ModifyScriptVisitor("");
+				ModifyScriptVisitor tableColumnVisitor = new ModifyScriptVisitor("", null);
 				ModifyScriptParser parser = new ModifyScriptParser(tokens);
 				tableColumnVisitor.Visit(parser.expr());
 			}
@@ -40,7 +40,7 @@ namespace Java2Dotnet.Spider.Extension.Test
 				ModifyScriptLexer lexer1 = new ModifyScriptLexer(input1);
 				CommonTokenStream tokens1 = new CommonTokenStream(lexer1);
 
-				ModifyScriptVisitor tableColumnVisitor = new ModifyScriptVisitor("");
+				ModifyScriptVisitor tableColumnVisitor = new ModifyScriptVisitor("", null);
 				ModifyScriptParser parser1 = new ModifyScriptParser(tokens1);
 				tableColumnVisitor.Visit(parser1.expr());
 			}

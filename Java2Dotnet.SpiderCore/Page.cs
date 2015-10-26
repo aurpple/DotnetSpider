@@ -216,6 +216,8 @@ namespace Java2Dotnet.Spider.Core
 			return this;
 		}
 
+		public  bool MissTargetUrls { get; set; }
+
 		public override string ToString()
 		{
 			return "Page{" +

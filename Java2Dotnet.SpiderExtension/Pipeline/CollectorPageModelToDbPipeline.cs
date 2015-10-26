@@ -101,7 +101,6 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 						break;
 					}
 			}
-
 		}
 
 		public ICollection GetCollected()

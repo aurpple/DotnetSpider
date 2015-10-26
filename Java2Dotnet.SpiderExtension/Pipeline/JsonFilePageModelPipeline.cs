@@ -23,7 +23,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		public JsonFilePageModelPipeline()
 		{
 			_logger = log4net.LogManager.GetLogger(GetType());
-			SetPath("/data/webmagic/");
+			SetPath("/data/donetspider/");
 		}
 
 		public JsonFilePageModelPipeline(string path)

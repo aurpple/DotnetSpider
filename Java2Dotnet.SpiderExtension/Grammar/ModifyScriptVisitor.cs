@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using Java2Dotnet.Spider.Core;
 
 namespace Java2Dotnet.Spider.Extension.Grammar
 {
@@ -24,19 +26,25 @@ namespace Java2Dotnet.Spider.Extension.Grammar
 	public class ModifyScriptVisitor : ModifyScriptBaseVisitor<Result>
 	{
 		public string Value;
-		private readonly Dictionary<string, Type> _supportType;
+		public bool NeedStop;
 
-		public ModifyScriptVisitor(string value)
+		private readonly Dictionary<string, Type> _supportType;
+		private PropertyInfo _field;
+
+		public ModifyScriptVisitor(string value, PropertyInfo field)
 		{
 			Value = value;
 
 			_supportType = new Dictionary<string, Type> {
 				{ "INT", typeof(int)},
+				{ "INT64", typeof(long)},
 				{ "FLOAT", typeof(float)},
 				{ "STRING", typeof(string)} ,
 				{ "BOOL", typeof(bool)} ,
 				{ "Object", typeof(object)}
 			};
+
+			_field = field;
 		}
 
 		public override Result VisitInt(ModifyScriptParser.IntContext context)
@@ -170,6 +178,137 @@ namespace Java2Dotnet.Spider.Extension.Grammar
 			return result;
 		}
 
-		
+		public override Result VisitReplace(ModifyScriptParser.ReplaceContext context)
+		{
+			string oldValue = ValueConverter.Convert(context.STRING()[0].GetText());
+			string newValue = ValueConverter.Convert(context.STRING()[1].GetText());
+			Value = Value.Replace(oldValue, newValue);
+			Result result = new Result() { Value = Value, Type = _supportType["STRING"] };
+
+			return result;
+		}
+
+		public override Result VisitCompare(ModifyScriptParser.CompareContext context)
+		{
+			string value = context.GetText();
+			return new Result() { Value = value, Type = _supportType["STRING"] };
+		}
+
+		public override Result VisitStoper(ModifyScriptParser.StoperContext context)
+		{
+			string compare = Visit(context.compare()).Value;
+			string value = ValueConverter.Convert(context.STRING().GetText());
+
+			if (_field.PropertyType == _supportType["INT"])
+			{
+				int compareValue;
+				int originalValue;
+				if (int.TryParse(value, out compareValue) && int.TryParse(Value, out originalValue))
+				{
+					switch (compare)
+					{
+						case ">":
+							NeedStop = originalValue > compareValue;
+							break;
+						case "<":
+							NeedStop = originalValue < compareValue;
+							break;
+						case "=":
+							NeedStop = originalValue == compareValue;
+							break;
+					}
+				}
+				else
+				{
+					throw new SpiderExceptoin($"Can't covert stoper value or Property value to int");
+				}
+			}
+
+			if (_field.PropertyType == _supportType["INT64"])
+			{
+				long compareValue;
+				long originalValue;
+				if (long.TryParse(value, out compareValue) && long.TryParse(Value, out originalValue))
+				{
+					switch (compare)
+					{
+						case ">":
+							NeedStop = originalValue > compareValue;
+							break;
+						case "<":
+							NeedStop = originalValue < compareValue;
+							break;
+						case "=":
+							NeedStop = originalValue == compareValue;
+							break;
+					}
+				}
+				else
+				{
+					throw new SpiderExceptoin($"Can't covert stoper value or Property value to int");
+				}
+			}
+
+			if (_field.PropertyType == _supportType["FLOAT"])
+			{
+				float compareValue;
+				float originalValue;
+				if (float.TryParse(value, out compareValue) && float.TryParse(Value, out originalValue))
+				{
+					switch (compare)
+					{
+						case ">":
+							NeedStop = originalValue > compareValue;
+							break;
+						case "<":
+							NeedStop = originalValue < compareValue;
+							break;
+						case "=":
+							NeedStop = originalValue == compareValue;
+							break;
+					}
+				}
+				else
+				{
+					throw new SpiderExceptoin($"Can't covert stoper value or Property value to FLOAT");
+				}
+			}
+
+			if (_field.PropertyType == _supportType["STRING"])
+			{
+				switch (compare)
+				{
+					case ">":
+					case "<":
+						throw new SpiderExceptoin($"Stoper can't set STRING > OR < STRING.");
+					case "=":
+						NeedStop = Value == value;
+						break;
+				}
+			}
+
+			if (_field.PropertyType == _supportType["BOOL"])
+			{
+				bool compareValue;
+				bool originalValue;
+				if (bool.TryParse(value, out compareValue) && bool.TryParse(Value, out originalValue))
+				{
+					switch (compare)
+					{
+						case ">":
+						case "<":
+							throw new SpiderExceptoin($"Stoper can't set BOOL > OR < BOOL.");
+						case "=":
+							NeedStop = originalValue == compareValue;
+							break;
+					}
+				}
+				else
+				{
+					throw new SpiderExceptoin($"Can't covert stoper value or Property value to BOOL");
+				}
+			}
+			return null;
+		}
 	}
 }

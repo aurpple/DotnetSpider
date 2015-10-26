@@ -19,7 +19,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		/// </summary>
 		public JsonFilePipeline()
 		{
-			SetPath("/data/webmagic");
+			SetPath("/data/donetspider");
 		}
 
 		public JsonFilePipeline(string path)

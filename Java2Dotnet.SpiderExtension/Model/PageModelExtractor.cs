@@ -254,10 +254,15 @@ namespace Java2Dotnet.Spider.Extension.Model
 			{
 				foreach (Regex targetPattern in _targetUrlPatterns)
 				{
+					string url = page.GetUrl().ToString();
 					//check
-					if (targetPattern.IsMatch(page.GetUrl().ToString()))
+					if (targetPattern.IsMatch(url))
 					{
 						matched = true;
+					}
+					else
+					{
+						Logger.Warn($"Url {url} is not match your TargetUrl attribute. Cause select 0 element.");
 					}
 				}
 			}
@@ -342,20 +347,26 @@ namespace Java2Dotnet.Spider.Extension.Model
 								CommonTokenStream tokens = new CommonTokenStream(lexer);
 								// implement custom expresion
 								IList<string> tmp = new List<string>();
+								bool missTargetUrls = false;
 								// ReSharper disable once PossibleNullReferenceException
 								foreach (string d in value)
 								{
 									lexer.Reset();
 									tokens.Reset();
 
-									ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d);
+									ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d, fieldExtractor.Field);
 									ModifyScriptParser parser = new ModifyScriptParser(tokens);
-									modifyScriptVisitor.Visit(parser.expr());
+									modifyScriptVisitor.Visit(parser.stats());
 									if (!string.IsNullOrEmpty(modifyScriptVisitor.Value))
 									{
 										tmp.Add(modifyScriptVisitor.Value);
 									}
+									if (!missTargetUrls && modifyScriptVisitor.NeedStop)
+									{
+										missTargetUrls = true;
+									}
 								}
+								page.MissTargetUrls = missTargetUrls;
 								value = tmp;
 							}
 
@@ -399,7 +410,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 										value = selector.GetValue(page)?.ToString();
 										if (string.IsNullOrEmpty(value))
 										{
-											
+
 										}
 									}
 									break;
@@ -428,11 +439,12 @@ namespace Java2Dotnet.Spider.Extension.Model
 								ModifyScriptLexer lexer = new ModifyScriptLexer(input);
 								CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-								ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value);
+								ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value, fieldExtractor.Field);
 								ModifyScriptParser parser = new ModifyScriptParser(tokens);
 
-								modifyScriptVisitor.Visit(parser.expr());
+								modifyScriptVisitor.Visit(parser.stats());
 								value = modifyScriptVisitor.Value;
+								page.MissTargetUrls = modifyScriptVisitor.NeedStop;
 							}
 
 							dynamic converted = Convert(value, fieldExtractor.ObjectFormatter);

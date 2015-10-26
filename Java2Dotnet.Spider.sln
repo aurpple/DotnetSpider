@@ -28,6 +28,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java2Dotnet.Spider.Scripts"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java2Dotnet.Spider.WebDriver", "Java2Dotnet.SpiderWebDriver\Java2Dotnet.Spider.WebDriver.csproj", "{CB2BAB22-E18C-4288-9083-B984C7EACE93}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spider", "Projects\Spider\Spider.csproj", "{E2D92EFA-CBC4-49FA-ADEB-B2093E9B9C1D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Projects", "Projects", "{5B704B15-4868-4067-8A18-5BA5951F7B72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,8 +74,15 @@ Global
 		{CB2BAB22-E18C-4288-9083-B984C7EACE93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB2BAB22-E18C-4288-9083-B984C7EACE93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB2BAB22-E18C-4288-9083-B984C7EACE93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2D92EFA-CBC4-49FA-ADEB-B2093E9B9C1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2D92EFA-CBC4-49FA-ADEB-B2093E9B9C1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2D92EFA-CBC4-49FA-ADEB-B2093E9B9C1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2D92EFA-CBC4-49FA-ADEB-B2093E9B9C1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E2D92EFA-CBC4-49FA-ADEB-B2093E9B9C1D} = {5B704B15-4868-4067-8A18-5BA5951F7B72}
 	EndGlobalSection
 EndGlobal

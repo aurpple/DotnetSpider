@@ -502,7 +502,8 @@ namespace Java2Dotnet.Spider.Core
 				OnError(request);
 				return;
 			}
-			// for cycle retry
+			// for cycle retry, 这个下载出错时, 会把自身Request扔回TargetUrls中做重复任务。所以此时，targetRequests只有本身
+			// 而不需要考虑 MissTargetUrls的情况
 			if (page.IsNeedCycleRetry())
 			{
 				ExtractAndAddRequests(page, true);
@@ -520,8 +521,12 @@ namespace Java2Dotnet.Spider.Core
 			//Logger.Info("process cost time:" + watch.ElapsedMilliseconds);
 
 			cts?.Cancel();
-			//check 为什么要两个展开
-			ExtractAndAddRequests(page, SpawnUrl);
+
+			if (!page.MissTargetUrls)
+			{
+				ExtractAndAddRequests(page, SpawnUrl);
+			}
+
 			cts?.Cancel();
 
 			//watch = new Stopwatch();

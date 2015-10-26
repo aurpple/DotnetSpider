@@ -43,7 +43,7 @@ namespace Java2Dotnet.Spider.Extension.Processor
 			foreach (PageModelExtractor pageModelExtractor in _pageModelExtractorList)
 			{
 				ExtractLinks(page, pageModelExtractor.GetHelpUrlRegionSelector(), pageModelExtractor.GetHelpUrlPatterns());
-				ExtractLinks(page, pageModelExtractor.GetTargetUrlRegionSelector(), pageModelExtractor.GetTargetUrlPatterns());
+
 				object process = pageModelExtractor.Process(page);
 				if (process == null || (process is IList && ((IList)process).Count == 0))
 				{
@@ -51,6 +51,9 @@ namespace Java2Dotnet.Spider.Extension.Processor
 				}
 				PostProcessPageModel(process);
 				page.PutField(pageModelExtractor.GetModelType().FullName, process);
+
+				//页面中的某些值可以控制是否继续展开, 如淘宝按销量排序,如果发现结果中有为0的的结果,则停止
+				ExtractLinks(page, pageModelExtractor.GetTargetUrlRegionSelector(), pageModelExtractor.GetTargetUrlPatterns());
 			}
 			if (page.GetResultItems().GetAll().Count == 0)
 			{
