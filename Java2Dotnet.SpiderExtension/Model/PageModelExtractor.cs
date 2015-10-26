@@ -337,7 +337,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 							{
 								MemoryStream stream = new MemoryStream();
 								StreamWriter writer = new StreamWriter(stream);
-								writer.Write(fieldExtractor.Expresion);
+								writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
 								writer.Flush();
 
 								// convert stream to string  
@@ -429,7 +429,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 							{
 								MemoryStream stream = new MemoryStream();
 								StreamWriter writer = new StreamWriter(stream);
-								writer.Write(fieldExtractor.Expresion);
+								writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
 								writer.Flush();
 
 								// convert stream to string  
