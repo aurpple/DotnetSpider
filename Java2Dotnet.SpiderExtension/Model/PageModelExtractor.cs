@@ -45,8 +45,9 @@ namespace Java2Dotnet.Spider.Extension.Model
 			if (extractBy != null)
 			{
 				ISelector selector = ExtractorUtils.GetSelector(extractBy);
+				// 改为由属性类型决定是否为List, Attribte可能设错, 而Property可能更可靠
 				fieldExtractor = new FieldExtractor(field, selector, extractBy.Source,
-					extractBy.NotNull, extractBy.Multi || field.PropertyType.IsGenericType);
+					extractBy.NotNull, field.PropertyType.IsGenericType);
 			}
 			return fieldExtractor;
 		}
@@ -137,10 +138,11 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 			else
 			{
-				if (!field.PropertyType.IsGenericType)
-				{
-					throw new SpiderExceptoin("Field " + field.Name + " must be generice type.");
-				}
+				// 注释掉, 已经改为从属性得IsMulti值了, 不可能两边不一至。
+				//if (!field.PropertyType.IsGenericType)
+				//{
+				//	throw new SpiderExceptoin("Field " + field.Name + " must be generice type.");
+				//}
 
 				Type[] genericType = field.PropertyType.GetGenericArguments();
 				if (genericType.Length != 1)

@@ -21,7 +21,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 		/// </summary>
 		public FilePipeline()
 		{
-			SetPath("/data/datascrawler/");
+			SetPath("/data/dotnetspider/");
 		}
 
 		public FilePipeline(string path)

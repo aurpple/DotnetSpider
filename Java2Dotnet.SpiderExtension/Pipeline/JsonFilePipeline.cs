@@ -19,7 +19,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		/// </summary>
 		public JsonFilePipeline()
 		{
-			SetPath("/data/donetspider");
+			SetPath("/data/dotnetspider");
 		}
 
 		public JsonFilePipeline(string path)
