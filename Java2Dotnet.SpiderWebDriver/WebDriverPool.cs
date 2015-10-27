@@ -20,6 +20,8 @@ namespace Java2Dotnet.Spider.WebDriver
 
 		private readonly int _capacity;
 
+		private readonly bool _loadPicture;
+
 		private static int STAT_RUNNING = 1;
 
 		private static int STAT_CLODED = 2;
@@ -37,10 +39,11 @@ namespace Java2Dotnet.Spider.WebDriver
 		 * store webDrivers available
 		 */
 
-		public WebDriverPool(Browser browser, int capacity = 5)
+		public WebDriverPool(Browser browser, int capacity = 5, bool loadPicture = true)
 		{
 			_capacity = capacity;
 			_browser = browser;
+			_loadPicture = loadPicture;
 		}
 
 		public WebDriverPool() : this(Browser.Phantomjs, DEFAULT_CAPACITY)
@@ -63,16 +66,22 @@ namespace Java2Dotnet.Spider.WebDriver
 							break;
 						case Browser.Firefox:
 							FirefoxProfile profile = new FirefoxProfile();
-							profile.SetPreference("permissions.default.stylesheet", 2);
-							profile.SetPreference("permissions.default.image", 2);
-							profile.SetPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false");
+							if (!_loadPicture)
+							{
+								profile.SetPreference("permissions.default.stylesheet", 2);
+								profile.SetPreference("permissions.default.image", 2);
+								profile.SetPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false");
+							}
 							e = new FirefoxDriver(profile);
 							break;
 						case Browser.Chrome:
 							ChromeDriverService cds = ChromeDriverService.CreateDefaultService();
 							cds.HideCommandPromptWindow = true;
 							ChromeOptions opt = new ChromeOptions();
-							//opt.AddUserProfilePreference("profile", new { default_content_settings = new { images = 2 } });
+							if (!_loadPicture)
+							{
+								opt.AddUserProfilePreference("profile", new {default_content_settings = new {images = 2}});
+							}
 							e = new ChromeDriver(cds, opt);
 							break;
 					}

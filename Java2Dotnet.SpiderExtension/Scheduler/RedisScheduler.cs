@@ -84,8 +84,9 @@ namespace Java2Dotnet.Spider.Extension.Scheduler
 				redis.Password = _password;
 				redis.AddItemToSortedSet(GetQueueKey(task), request.Url);
 
-				if (request.Extras != null && request.Extras.Count > 0)
-				{
+				// 没有必要判断浪费性能了, 这里不可能为空。最少会有一个层级数据 Grade
+				//if (request.Extras != null && request.Extras.Count > 0)
+				//{
 					string field = Encrypt.Md5Encrypt(request.Url);
 					string value = JsonConvert.SerializeObject(request);
 
@@ -99,7 +100,7 @@ namespace Java2Dotnet.Spider.Extension.Scheduler
 						value1 = redis.GetValueFromHash(ItemPrefix + task.Identify, field);
 						Thread.Sleep(150);
 					}
-				}
+				//}
 			}
 		}
 
@@ -129,7 +130,9 @@ namespace Java2Dotnet.Spider.Extension.Scheduler
 					return JsonConvert.DeserializeObject<Request>(json);
 				}
 
-				Request request = new Request(url, null);
+				// 严格意义上说不会走到这里, 一定会有JSON数据,详情看Push方法
+				// 是否应该设为1级？
+				Request request = new Request(url, 1, null);
 				return request;
 			}
 		}

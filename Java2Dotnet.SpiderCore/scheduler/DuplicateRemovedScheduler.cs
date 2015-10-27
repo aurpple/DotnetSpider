@@ -39,6 +39,11 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 		{
 		}
 
+		/// <summary>
+		/// 用于如果URL执行失败, 重新添加回TargetUrls时因Hash而不能重新加入队列的问题
+		/// </summary>
+		/// <param name="request"></param>
+		/// <returns></returns>
 		private bool ShouldReserved(Request request)
 		{
 			var cycleTriedTimes = (int?)request.GetExtra(Request.CycleTriedTimes);

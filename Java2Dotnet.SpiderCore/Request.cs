@@ -16,12 +16,20 @@ namespace Java2Dotnet.Spider.Core
 		public const string StatusCode = "statusCode";
 		public const string Proxy = "proxy";
 
+		private const string Deep = "deep";
+
 		private readonly string _url;
 
-		public Request(string url, IDictionary<string, dynamic> extras)
+		public Request(string url, int grade, IDictionary<string, dynamic> extras)
 		{
 			_url = HttpUtility.HtmlDecode(url);
 			Extras = extras;
+			PutExtra(Deep, grade);
+		}
+
+		public int NextDeep()
+		{
+			return GetExtra(Deep) + 1;
 		}
 
 		/// <summary>
@@ -120,7 +128,7 @@ namespace Java2Dotnet.Spider.Core
 			{
 				extras.Add(entry.Key, entry.Value);
 			}
-			Request newObj = new Request(Url, extras);
+			Request newObj = new Request(Url, GetExtra(Deep), extras);
 			return newObj;
 		}
 	}

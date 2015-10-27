@@ -158,7 +158,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <returns></returns>
 		public Site AddStartUrl(string startUrl)
 		{
-			return AddStartRequest(new Request(startUrl, null));
+			return AddStartRequest(new Request(startUrl, 1, null));
 		}
 
 		/// <summary>
@@ -170,7 +170,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <returns></returns>
 		public Site AddStartUrl(string startUrl, IDictionary<string, object> data)
 		{
-			return AddStartRequest(new Request(startUrl, data));
+			return AddStartRequest(new Request(startUrl, 1, data));
 		}
 
 		public Site AddStartUrls(IList<string> startUrls)

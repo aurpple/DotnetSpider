@@ -13,7 +13,7 @@ namespace Java2Dotnet.Spider.Samples
 				SleepTime = 10000
 			}, new CollectorPageModelToDbPipeline(), typeof(Ganji));
 			ooSpider.SetThreadNum(1);
-			Request request = new Request("http://mobds.ganji.com/datashare/", null);
+			Request request = new Request("http://mobds.ganji.com/datashare/", 1, null);
 			request.Method = "POST";
 			ooSpider.AddRequest(request);
 			ooSpider.Run();

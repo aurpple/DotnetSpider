@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Java2Dotnet.Spider.Core;
+using Java2Dotnet.Spider.Core.Pipeline;
+using Java2Dotnet.Spider.Core.Scheduler;
 using Java2Dotnet.Spider.Core.Utils;
 using Java2Dotnet.Spider.Extension.DbSupport.Dapper.Attributes;
 using Java2Dotnet.Spider.Extension.Model;
@@ -18,11 +20,11 @@ namespace Java2Dotnet.Spider.Samples.Samples
 	{
 		public static void RunTask()
 		{
-			OoSpider ooSpider = OoSpider.Create("aiqiyi_movies_" + DateTime.Now.ToLocalTime().ToString(),
-				new Site { SleepTime = 1000, Encoding = Encoding.UTF8 }, new CollectorPageModelToDbPipeline(), typeof(walter));
+			OoSpider ooSpider = OoSpider.Create("aiqiyi_movies_" + DateTime.Now.ToLocalTime(),
+				new Site { SleepTime = 1000, Encoding = Encoding.UTF8 }, new ConsolePageModelPipeline(), typeof(walter));
 			ooSpider.SetEmptySleepTime(15000);
 			ooSpider.SetThreadNum(1);
-			ooSpider.SetScheduler(new RedisScheduler("localhost", null));
+			ooSpider.SetScheduler(new QueueScheduler());
 			ooSpider.AddUrl("http://top.iqiyi.com/dianshiju.html#");
 			ooSpider.Run();
 		}

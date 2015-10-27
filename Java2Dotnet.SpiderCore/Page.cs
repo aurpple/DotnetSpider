@@ -101,7 +101,7 @@ namespace Java2Dotnet.Spider.Core
 					continue;
 				}
 				string s1 = UrlUtils.CanonicalizeUrl(s, _url.ToString());
-				_targetRequests.Add(new Request(s1, _request?.Extras));
+				_targetRequests.Add(new Request(s1, _request.NextDeep(), _request?.Extras));
 			}
 		}
 
@@ -120,7 +120,7 @@ namespace Java2Dotnet.Spider.Core
 					continue;
 				}
 				string s1 = UrlUtils.CanonicalizeUrl(s, _url.ToString());
-				Request request = new Request(s1, _request?.Extras) { Priority = priority };
+				Request request = new Request(s1, _request.NextDeep(), _request?.Extras) { Priority = priority };
 				_targetRequests.Add(request);
 			}
 		}
@@ -139,7 +139,7 @@ namespace Java2Dotnet.Spider.Core
 			}
 
 			requestString = UrlUtils.CanonicalizeUrl(requestString, _url.ToString());
-			_targetRequests.Add(new Request(requestString, _request?.Extras));
+			_targetRequests.Add(new Request(requestString, _request.NextDeep(), _request?.Extras));
 		}
 
 		/// <summary>
@@ -216,7 +216,7 @@ namespace Java2Dotnet.Spider.Core
 			return this;
 		}
 
-		public  bool MissTargetUrls { get; set; }
+		public bool MissTargetUrls { get; set; }
 
 		public override string ToString()
 		{

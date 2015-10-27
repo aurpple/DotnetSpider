@@ -92,7 +92,7 @@ namespace Java2Dotnet.Spider.Core.Test
 				{
 					return null;
 				}
-				return new Request("test", null);
+				return new Request("test", 1, null);
 			}
 
 			public void Finish(ITask task)

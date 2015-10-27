@@ -15,7 +15,7 @@ namespace Java2Dotnet.Spider.Core.Test.Pipeline
 		{
 			_resultItems = new ResultItems();
 			_resultItems.Put("content", "webmagic 爬虫工具");
-			Request request = new Request("http://www.baidu.com", null);
+			Request request = new Request("http://www.baidu.com", 1, null);
 			_resultItems.Request = request;
 			_task = new TestTask();
 

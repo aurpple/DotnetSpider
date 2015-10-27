@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text;
-using Java2Dotnet.Spider.Core.Selector;
 using log4net;
 
 namespace Java2Dotnet.Spider.Core.Downloader
@@ -16,29 +14,6 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			{
 				Logger = LogManager.GetLogger(GetType());
 			}
-		}
-
-		/// <summary>
-		/// A simple method to download a url
-		/// </summary>
-		/// <param name="url">url</param>
-		/// <returns>html</returns>
-		public Html Download(string url)
-		{
-			return Download(url, null);
-		}
-
-		/// <summary>
-		/// A simple method to download a url
-		/// </summary>
-		/// <param name="url">url</param>
-		/// <param name="encoding">charset</param>
-		/// <returns>Html</returns>
-		public Html Download(string url, Encoding encoding)
-		{
-			var site = new Site { Encoding = encoding };
-			Page page = Download(new Request(url, null), site.ToTask());
-			return page.GetHtml();
 		}
 
 		public virtual Page Download(Request request, ITask task)
@@ -68,7 +43,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			}
 			else
 			{
-				long cycleTriedTimes = (long)cycleTriedTimesObject;
+				int cycleTriedTimes = (int)cycleTriedTimesObject;
 				cycleTriedTimes++;
 				if (cycleTriedTimes >= site.CycleRetryTimes)
 				{

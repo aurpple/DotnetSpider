@@ -53,6 +53,7 @@ namespace Java2Dotnet.Spider.Core
 		protected HashSet<Request> StartRequests { get; set; }
 		protected IScheduler Scheduler { get; set; } = new QueueScheduler();
 		public int ThreadNum { get; set; } = 1;
+		public int Deep { get; set; } = int.MaxValue;
 		protected static ILog Logger;
 
 		protected readonly static int StatInit = 0;
@@ -122,7 +123,7 @@ namespace Java2Dotnet.Spider.Core
 		public Spider StartUrls(IList<string> startUrls)
 		{
 			CheckIfRunning();
-			StartRequests = new HashSet<Request>(UrlUtils.ConvertToRequests(startUrls));
+			StartRequests = new HashSet<Request>(UrlUtils.ConvertToRequests(startUrls, 1));
 			return this;
 		}
 
@@ -482,7 +483,7 @@ namespace Java2Dotnet.Spider.Core
 			{
 				foreach (string url in urls)
 				{
-					ProcessRequest(new Request(url, null));
+					ProcessRequest(new Request(url, 1, null));
 				}
 			}
 		}
@@ -564,7 +565,7 @@ namespace Java2Dotnet.Spider.Core
 
 		protected void ExtractAndAddRequests(Page page, bool spawnUrl)
 		{
-			if (spawnUrl && page.GetTargetRequests() != null && page.GetTargetRequests().Count > 0)
+			if (spawnUrl && page.GetRequest().NextDeep() < Deep && page.GetTargetRequests() != null && page.GetTargetRequests().Count > 0)
 			{
 				foreach (Request request in page.GetTargetRequests())
 				{
@@ -596,7 +597,7 @@ namespace Java2Dotnet.Spider.Core
 			{
 				if (t.Exception != null)
 				{
-					Logger.Error(t.Exception);
+					Logger.Error(t.Exception.Message);
 				}
 			});
 		}
@@ -610,7 +611,7 @@ namespace Java2Dotnet.Spider.Core
 		{
 			foreach (string url in urls)
 			{
-				AddRequest(new Request(url, null));
+				AddRequest(new Request(url, 1, null));
 			}
 			return this;
 		}
@@ -619,7 +620,7 @@ namespace Java2Dotnet.Spider.Core
 		{
 			foreach (string url in urls)
 			{
-				AddRequest(new Request(url, null));
+				AddRequest(new Request(url, 1, null));
 			}
 			return this;
 		}
@@ -635,7 +636,7 @@ namespace Java2Dotnet.Spider.Core
 			DestroyWhenExit = false;
 			SpawnUrl = false;
 
-			foreach (Request request in UrlUtils.ConvertToRequests(urls))
+			foreach (Request request in UrlUtils.ConvertToRequests(urls, 1))
 			{
 				AddRequest(request);
 			}

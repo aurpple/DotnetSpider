@@ -49,6 +49,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			HttpWebResponse response = null;
 			try
 			{
+				throw  new Exception("test");
 				HttpWebRequest httpWebRequest = GetHttpWebRequest(request, site, headers);
 				response = (HttpWebResponse)httpWebRequest.GetResponse();
 				statusCode = (int)response.StatusCode;
