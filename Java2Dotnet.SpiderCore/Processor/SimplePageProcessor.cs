@@ -12,7 +12,7 @@ namespace Java2Dotnet.Spider.Core.Processor
 
 		public SimplePageProcessor(string startUrl, string urlPattern)
 		{
-			Site = new Site();  //test
+			Site = new Site();
 			Site.AddStartUrl(startUrl);
 			Site.Domain = UrlUtils.GetDomain(startUrl);
 			//compile "*" expression to regex
