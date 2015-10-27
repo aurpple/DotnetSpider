@@ -41,7 +41,7 @@ namespace Java2Dotnet.Spider.Extension.Utils
 		public static Extractor GetExtractor(ExtractBy extractBy)
 		{
 			ISelector selector = GetSelector(extractBy);
-			return new Extractor(selector, extractBy.Source, extractBy.NotNull, extractBy.Multi, extractBy.Expresion,extractBy.Count);
+			return new Extractor(selector, extractBy.Source, extractBy.NotNull, extractBy.Multi,extractBy.Count);
 		}
 
 		private static ISelector GetXpathSelector(string value)

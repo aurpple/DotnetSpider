@@ -196,117 +196,126 @@ namespace Java2Dotnet.Spider.Extension.Grammar
 
 		public override Result VisitStoper(ModifyScriptParser.StoperContext context)
 		{
-			string compare = Visit(context.compare()).Value;
-			string value = ValueConverter.Convert(context.STRING().GetText());
-
-			if (_field.PropertyType == _supportType["INT"])
+			try
 			{
-				int compareValue;
-				int originalValue;
-				if (int.TryParse(value, out compareValue) && int.TryParse(Value, out originalValue))
+
+				string compare = Visit(context.compare()).Value;
+				string value = ValueConverter.Convert(context.STRING().GetText());
+
+				if (_field.PropertyType == _supportType["INT"])
 				{
-					switch (compare)
+					int compareValue;
+					int originalValue;
+					if (int.TryParse(value, out compareValue) && int.TryParse(Value, out originalValue))
 					{
-						case ">":
-							NeedStop = originalValue > compareValue;
-							break;
-						case "<":
-							NeedStop = originalValue < compareValue;
-							break;
-						case "=":
-							NeedStop = originalValue == compareValue;
-							break;
+						switch (compare)
+						{
+							case ">":
+								NeedStop = originalValue > compareValue;
+								break;
+							case "<":
+								NeedStop = originalValue < compareValue;
+								break;
+							case "=":
+								NeedStop = originalValue == compareValue;
+								break;
+						}
+					}
+					else
+					{
+						throw new SpiderExceptoin($"Can't covert stoper value or Property value to int");
 					}
 				}
-				else
-				{
-					throw new SpiderExceptoin($"Can't covert stoper value or Property value to int");
-				}
-			}
 
-			if (_field.PropertyType == _supportType["INT64"])
-			{
-				long compareValue;
-				long originalValue;
-				if (long.TryParse(value, out compareValue) && long.TryParse(Value, out originalValue))
+				if (_field.PropertyType == _supportType["INT64"])
 				{
-					switch (compare)
+					long compareValue;
+					long originalValue;
+					if (long.TryParse(value, out compareValue) && long.TryParse(Value, out originalValue))
 					{
-						case ">":
-							NeedStop = originalValue > compareValue;
-							break;
-						case "<":
-							NeedStop = originalValue < compareValue;
-							break;
-						case "=":
-							NeedStop = originalValue == compareValue;
-							break;
+						switch (compare)
+						{
+							case ">":
+								NeedStop = originalValue > compareValue;
+								break;
+							case "<":
+								NeedStop = originalValue < compareValue;
+								break;
+							case "=":
+								NeedStop = originalValue == compareValue;
+								break;
+						}
+					}
+					else
+					{
+						throw new SpiderExceptoin($"Can't covert stoper value or Property value to int");
 					}
 				}
-				else
-				{
-					throw new SpiderExceptoin($"Can't covert stoper value or Property value to int");
-				}
-			}
 
-			if (_field.PropertyType == _supportType["FLOAT"])
-			{
-				float compareValue;
-				float originalValue;
-				if (float.TryParse(value, out compareValue) && float.TryParse(Value, out originalValue))
+				if (_field.PropertyType == _supportType["FLOAT"])
 				{
-					switch (compare)
+					float compareValue;
+					float originalValue;
+					if (float.TryParse(value, out compareValue) && float.TryParse(Value, out originalValue))
 					{
-						case ">":
-							NeedStop = originalValue > compareValue;
-							break;
-						case "<":
-							NeedStop = originalValue < compareValue;
-							break;
-						case "=":
-							NeedStop = originalValue == compareValue;
-							break;
+						switch (compare)
+						{
+							case ">":
+								NeedStop = originalValue > compareValue;
+								break;
+							case "<":
+								NeedStop = originalValue < compareValue;
+								break;
+							case "=":
+								NeedStop = originalValue == compareValue;
+								break;
+						}
+					}
+					else
+					{
+						throw new SpiderExceptoin($"Can't covert stoper value or Property value to FLOAT");
 					}
 				}
-				else
-				{
-					throw new SpiderExceptoin($"Can't covert stoper value or Property value to FLOAT");
-				}
-			}
 
-			if (_field.PropertyType == _supportType["STRING"])
-			{
-				switch (compare)
-				{
-					case ">":
-					case "<":
-						throw new SpiderExceptoin($"Stoper can't set STRING > OR < STRING.");
-					case "=":
-						NeedStop = Value == value;
-						break;
-				}
-			}
-
-			if (_field.PropertyType == _supportType["BOOL"])
-			{
-				bool compareValue;
-				bool originalValue;
-				if (bool.TryParse(value, out compareValue) && bool.TryParse(Value, out originalValue))
+				if (_field.PropertyType == _supportType["STRING"])
 				{
 					switch (compare)
 					{
 						case ">":
 						case "<":
-							throw new SpiderExceptoin($"Stoper can't set BOOL > OR < BOOL.");
+							throw new SpiderExceptoin($"Stoper can't set STRING > OR < STRING.");
 						case "=":
-							NeedStop = originalValue == compareValue;
+							NeedStop = Value == value;
 							break;
 					}
 				}
-				else
+
+				if (_field.PropertyType == _supportType["BOOL"])
 				{
-					throw new SpiderExceptoin($"Can't covert stoper value or Property value to BOOL");
+					bool compareValue;
+					bool originalValue;
+					if (bool.TryParse(value, out compareValue) && bool.TryParse(Value, out originalValue))
+					{
+						switch (compare)
+						{
+							case ">":
+							case "<":
+								throw new SpiderExceptoin($"Stoper can't set BOOL > OR < BOOL.");
+							case "=":
+								NeedStop = originalValue == compareValue;
+								break;
+						}
+					}
+					else
+					{
+						throw new SpiderExceptoin($"Can't covert stoper value or Property value to BOOL");
+					}
 				}
+				
+			}
+			catch (Exception e)
+			{
+				
 			}
 			return null;
 		}

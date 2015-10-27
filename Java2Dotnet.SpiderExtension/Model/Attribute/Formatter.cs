@@ -1,4 +1,5 @@
 using System;
+using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Extension.Model.Formatter;
 
 namespace Java2Dotnet.Spider.Extension.Model.Attribute
@@ -6,14 +7,17 @@ namespace Java2Dotnet.Spider.Extension.Model.Attribute
 	/// <summary>
 	/// Define how the result string is convert to an object for field.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property)]
+	[AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
 	public class Formatter : System.Attribute
 	{
-		public Formatter(string[] value, Type type = null, IObjectFormatter formatter = null)
+		private Type _formatterType;
+
+		public Formatter(Type formatter, string[] value = null, bool useDefaultFormatter = false, Type subType = null)
 		{
 			Value = value;
-			SubType = type;
-			ObjectFormatter = formatter;
+			SubType = subType;
+			FormatterType = formatter;
+			UseDefaultFormatter = useDefaultFormatter;
 		}
 
 		/// <summary>
@@ -28,9 +32,22 @@ namespace Java2Dotnet.Spider.Extension.Model.Attribute
 		/// </summary>
 		public Type SubType;
 
+		public bool UseDefaultFormatter { get; set; }
+
 		/// <summary>
 		/// If there are more than one formatter for a class, just specify the implement.
 		/// </summary>
-		public IObjectFormatter ObjectFormatter { get; set; }
+		public Type FormatterType
+		{
+			get { return _formatterType; }
+			set
+			{
+				if (value == null)
+				{
+					throw new SpiderExceptoin("Formatter type can't be null.");
+				}
+				_formatterType = value;
+			}
+		}
 	}
 }

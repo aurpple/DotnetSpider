@@ -20,6 +20,7 @@ namespace Java2Dotnet.Spider.WebDriver
 		private volatile WebDriverPool _webDriverPool;
 		private readonly int _webDriverWaitTime;
 		private readonly Browser _browser;
+		public Func<IWebDriver, bool> LoginFunc;
 
 		public WebDriverDownloader(Browser browser = Browser.Phantomjs, int webDriverWaitTime = 200)
 		{
@@ -31,12 +32,20 @@ namespace Java2Dotnet.Spider.WebDriver
 		{
 			CheckInit();
 			Site site = task.Site;
-			IWebDriver webDriver = null;
+			WebDriverItem webDriver = null;
 			try
 			{
 				webDriver = _webDriverPool.Get();
+				if (!webDriver.IsLogined && LoginFunc != null)
+				{
+					webDriver.IsLogined = LoginFunc.Invoke(webDriver.WebDriver);
+					if (!webDriver.IsLogined)
+					{
+						throw new SpiderExceptoin("Login failed. Please check your login codes.");
+					}
+				}
 
-				IOptions manage = webDriver.Manage();
+				IOptions manage = webDriver.WebDriver.Manage();
 				if (site.GetCookies() != null)
 				{
 					foreach (KeyValuePair<String, String> cookieEntry in site.GetCookies())
@@ -56,9 +65,9 @@ namespace Java2Dotnet.Spider.WebDriver
 									 ? ""
 									 : ("?" + HttpUtility.UrlPathEncode(uri.Query.Substring(1, uri.Query.Length - 1))));
 
-				webDriver.Navigate().GoToUrl(realUrl);
+				webDriver.WebDriver.Navigate().GoToUrl(realUrl);
 
-				string resultUrl = webDriver.Url;
+				string resultUrl = webDriver.WebDriver.Url;
 				if (resultUrl.Contains("error") || resultUrl.Contains("login") || resultUrl.Contains("//www.tmall.com"))
 				{
 					Logger.Error("Url error: " + realUrl);
@@ -73,7 +82,7 @@ namespace Java2Dotnet.Spider.WebDriver
 				//String content = webElement.GetAttribute("outerHTML");
 
 				Page page = new Page(request);
-				page.SetRawText(webDriver.PageSource);
+				page.SetRawText(webDriver.WebDriver.PageSource);
 				page.SetUrl(new PlainText(request.Url));
 
 				// 结束后要置空, 这个值存到Redis会导置无限循环跑单个任务

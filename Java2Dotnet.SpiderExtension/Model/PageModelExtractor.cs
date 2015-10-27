@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Antlr4.Runtime;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Selector;
-using Java2Dotnet.Spider.Extension.Grammar;
 using Java2Dotnet.Spider.Extension.Model.Attribute;
 using Java2Dotnet.Spider.Extension.Model.Formatter;
 using Java2Dotnet.Spider.Extension.Utils;
@@ -37,6 +34,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 		{
 			var pageModelExtractor = new PageModelExtractor(type);
 			pageModelExtractor.Init();
+
 			return pageModelExtractor;
 		}
 
@@ -48,7 +46,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 			{
 				ISelector selector = ExtractorUtils.GetSelector(extractBy);
 				fieldExtractor = new FieldExtractor(field, selector, extractBy.Source,
-					extractBy.NotNull, extractBy.Multi || field.PropertyType.IsGenericType, extractBy.Expresion);
+					extractBy.NotNull, extractBy.Multi || field.PropertyType.IsGenericType);
 			}
 			return fieldExtractor;
 		}
@@ -100,7 +98,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 						break;
 				}
 				fieldExtractor = new FieldExtractor(field, selector, comboExtract.Source,
-						comboExtract.NotNull, comboExtract.Multi || field.PropertyType.IsGenericType, null);
+						comboExtract.NotNull, comboExtract.Multi || field.PropertyType.IsGenericType);
 			}
 
 			return fieldExtractor;
@@ -110,27 +108,30 @@ namespace Java2Dotnet.Spider.Extension.Model
 		{
 			//check custom formatter
 			Attribute.Formatter formatter = field.GetCustomAttribute<Attribute.Formatter>();
-			Type formatterType;
-			if (formatter?.ObjectFormatter != null)
+			Stoper stoper = field.GetCustomAttribute<Stoper>();
+			fieldExtractor.Stoper = stoper;
+
+			IObjectFormatter objectFormatter;
+			if (formatter?.FormatterType != null)
 			{
-				//  if (!formatter.formatter().equals(ObjectFormatter.class)) {
-				IObjectFormatter objectFormatter = formatter.ObjectFormatter;
-				objectFormatter.InitParam(formatter.Value);
-				fieldExtractor.ObjectFormatter = objectFormatter;
+				fieldExtractor.ObjectFormatter = (IObjectFormatter)Activator.CreateInstance(formatter.FormatterType);
+				if (formatter.UseDefaultFormatter)
+				{
+					fieldExtractor.ObjectFormatter.NextFormatter = FormatterFactory.GetFormatter(field.PropertyType);
+				}
+				fieldExtractor.ObjectFormatter.InitParam(formatter.Value);
 				return;
-				//   }
 			}
 			else
 			{
-				formatterType = FormatterFactory.GetFormatter(field.PropertyType);
+				objectFormatter = FormatterFactory.GetFormatter(field.PropertyType);
 			}
 
 			if (!fieldExtractor.Multi)
 			{
-				IObjectFormatter objectFormatter = GetObjectFormatter(formatterType);
 				if (objectFormatter == null)
 				{
-					throw new Exception("Can't find formatter for field " + field.Name + " of type " + formatterType);
+					throw new Exception("Can't find formatter for field " + field.Name + " of type " + field.PropertyType.Name);
 				}
 				fieldExtractor.ObjectFormatter = objectFormatter;
 			}
@@ -153,7 +154,6 @@ namespace Java2Dotnet.Spider.Extension.Model
 					throw new SpiderExceptoin("Field " + field.Name + " did not contains Add(T t) method.");
 				}
 
-				IObjectFormatter objectFormatter = GetObjectFormatter(formatterType);
 				if (objectFormatter == null)
 				{
 					if (formatter != null)
@@ -164,19 +164,6 @@ namespace Java2Dotnet.Spider.Extension.Model
 					fieldExtractor.ObjectFormatter = objectFormatter;
 				}
 			}
-		}
-
-		private IObjectFormatter GetObjectFormatter(Type type)
-		{
-			try
-			{
-				return (IObjectFormatter)Activator.CreateInstance(type);
-			}
-			catch (Exception e)
-			{
-				Logger.Error("init ObjectFormatter fail", e);
-			}
-			return null;
 		}
 
 		private FieldExtractor GetAnnotationExtractByUrl(PropertyInfo field)
@@ -192,7 +179,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 				}
 				fieldExtractor = new FieldExtractor(field,
 						new RegexSelector(regexPattern), ExtractSource.Url, extractByUrl.NotNull,
-						extractByUrl.Multi || field.PropertyType.IsGenericType, null);
+						extractByUrl.Multi || field.PropertyType.IsGenericType);
 
 			}
 			return fieldExtractor;
@@ -333,44 +320,56 @@ namespace Java2Dotnet.Spider.Extension.Model
 
 						if (fieldExtractor.ObjectFormatter != null)
 						{
-							if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
-							{
-								MemoryStream stream = new MemoryStream();
-								StreamWriter writer = new StreamWriter(stream);
-								writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
-								writer.Flush();
+							//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
+							//{
+							//	MemoryStream stream = new MemoryStream();
+							//	StreamWriter writer = new StreamWriter(stream);
+							//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
+							//	writer.Flush();
 
-								// convert stream to string  
-								stream.Position = 0;
-								AntlrInputStream input = new AntlrInputStream(stream);
-								ModifyScriptLexer lexer = new ModifyScriptLexer(input);
-								CommonTokenStream tokens = new CommonTokenStream(lexer);
-								// implement custom expresion
-								IList<string> tmp = new List<string>();
-								bool missTargetUrls = false;
-								// ReSharper disable once PossibleNullReferenceException
-								foreach (string d in value)
-								{
-									lexer.Reset();
-									tokens.Reset();
+							//	// convert stream to string  
+							//	stream.Position = 0;
+							//	AntlrInputStream input = new AntlrInputStream(stream);
+							//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
+							//	CommonTokenStream tokens = new CommonTokenStream(lexer);
+							//	// implement custom expresion
+							//	IList<string> tmp = new List<string>();
+							//	bool missTargetUrls = false;
+							//	// ReSharper disable once PossibleNullReferenceException
+							//	foreach (string d in value)
+							//	{
+							//		lexer.Reset();
+							//		tokens.Reset();
 
-									ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d, fieldExtractor.Field);
-									ModifyScriptParser parser = new ModifyScriptParser(tokens);
-									modifyScriptVisitor.Visit(parser.stats());
-									if (!string.IsNullOrEmpty(modifyScriptVisitor.Value))
-									{
-										tmp.Add(modifyScriptVisitor.Value);
-									}
-									if (!missTargetUrls && modifyScriptVisitor.NeedStop)
-									{
-										missTargetUrls = true;
-									}
-								}
-								page.MissTargetUrls = missTargetUrls;
-								value = tmp;
-							}
+							//		ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d, fieldExtractor.Field);
+							//		ModifyScriptParser parser = new ModifyScriptParser(tokens);
+							//		modifyScriptVisitor.Visit(parser.stats());
+							//		if (!string.IsNullOrEmpty(modifyScriptVisitor.Value))
+							//		{
+							//			tmp.Add(modifyScriptVisitor.Value);
+							//		}
+							//		if (!missTargetUrls && modifyScriptVisitor.NeedStop)
+							//		{
+							//			missTargetUrls = true;
+							//		}
+							//	}
+							//	page.MissTargetUrls = missTargetUrls;
+							//	value = tmp;
+							//}
 
 							IList<dynamic> converted = Convert(value, fieldExtractor.ObjectFormatter);
+
+							if (fieldExtractor.Stoper != null)
+							{
+								foreach (string d in converted)
+								{
+									if (fieldExtractor.Stoper.NeedStop(d) && !page.MissTargetUrls)
+									{
+										page.MissTargetUrls = true;
+										break;
+									}
+								}
+							}
 
 							dynamic field = fieldExtractor.Field.GetValue(o) ?? Activator.CreateInstance(fieldExtractor.Field.PropertyType);
 
@@ -408,10 +407,6 @@ namespace Java2Dotnet.Spider.Extension.Model
 									if (selector != null)
 									{
 										value = selector.GetValue(page)?.ToString();
-										if (string.IsNullOrEmpty(value))
-										{
-
-										}
 									}
 									break;
 								}
@@ -425,27 +420,27 @@ namespace Java2Dotnet.Spider.Extension.Model
 						}
 						if (fieldExtractor.ObjectFormatter != null)
 						{
-							if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
-							{
-								MemoryStream stream = new MemoryStream();
-								StreamWriter writer = new StreamWriter(stream);
-								writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
-								writer.Flush();
+							//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
+							//{
+							//	MemoryStream stream = new MemoryStream();
+							//	StreamWriter writer = new StreamWriter(stream);
+							//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
+							//	writer.Flush();
 
-								// convert stream to string  
-								stream.Position = 0;
-								AntlrInputStream input = new AntlrInputStream(stream);
+							//	// convert stream to string  
+							//	stream.Position = 0;
+							//	AntlrInputStream input = new AntlrInputStream(stream);
 
-								ModifyScriptLexer lexer = new ModifyScriptLexer(input);
-								CommonTokenStream tokens = new CommonTokenStream(lexer);
+							//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
+							//	CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-								ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value, fieldExtractor.Field);
-								ModifyScriptParser parser = new ModifyScriptParser(tokens);
+							//	ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value, fieldExtractor.Field);
+							//	ModifyScriptParser parser = new ModifyScriptParser(tokens);
 
-								modifyScriptVisitor.Visit(parser.stats());
-								value = modifyScriptVisitor.Value;
-								page.MissTargetUrls = modifyScriptVisitor.NeedStop;
-							}
+							//	modifyScriptVisitor.Visit(parser.stats());
+							//	value = modifyScriptVisitor.Value;
+							//	page.MissTargetUrls = modifyScriptVisitor.NeedStop;
+							//}
 
 							dynamic converted = Convert(value, fieldExtractor.ObjectFormatter);
 
@@ -453,6 +448,12 @@ namespace Java2Dotnet.Spider.Extension.Model
 							{
 								return null;
 							}
+
+							if (fieldExtractor.Stoper != null && !page.MissTargetUrls)
+							{
+								page.MissTargetUrls = fieldExtractor.Stoper.NeedStop(converted);
+							}
+
 							fieldExtractor.Field.SetValue(o, converted);
 						}
 						else
@@ -467,7 +468,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 			catch (Exception e)
 			{
-				Logger.Error("extract fail", e);
+				Logger.Error("Extract fail", e);
 			}
 			return o;
 		}

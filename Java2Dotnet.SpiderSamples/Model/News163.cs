@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Pipeline;
 using Java2Dotnet.Spider.Extension;
 using Java2Dotnet.Spider.Extension.Model;
 using Java2Dotnet.Spider.Extension.Model.Attribute;
+using Java2Dotnet.Spider.Extension.Model.Formatter;
 using Java2Dotnet.Spider.Extension.Pipeline;
 using Java2Dotnet.Spider.Extension.Scheduler;
 
@@ -20,7 +22,8 @@ namespace Java2Dotnet.Spider.Samples.Model
 
 		////div[@class=\"ep-pages\"]/a[substring(@href,string-length(@href)-5)='.html']
 
-		[ExtractBy(Value = "//div[@class=\"ep-pages\"]/a/@href", Multi = true, NotNull = false, Expresion = "regex('http://news\\.163\\.com/\\d+/\\d+/\\d+/\\w+_(\\d+)\\.html',1)")]
+		[Formatter(typeof(RegexFormater), new[] { "http://news\\.163\\.com/\\d+/\\d+/\\d+/\\w+_(\\d+)\\.html", "1" })]
+		[ExtractBy(Value = "//div[@class=\"ep-pages\"]/a/@href", Multi = true, NotNull = false)]
 		public HashSet<string> OtherPage { get; set; }
 
 		[ExtractBy(Value = "//h1[@id=\"h1title\"]/text()")]

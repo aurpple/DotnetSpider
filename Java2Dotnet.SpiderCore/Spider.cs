@@ -522,8 +522,9 @@ namespace Java2Dotnet.Spider.Core
 
 			cts?.Cancel();
 
-			if (!page.MissTargetUrls)
+			if (page.MissTargetUrls)
 			{
+				Logger.Info($"Stoper trigger worked on this page.");
 				ExtractAndAddRequests(page, SpawnUrl);
 			}
 

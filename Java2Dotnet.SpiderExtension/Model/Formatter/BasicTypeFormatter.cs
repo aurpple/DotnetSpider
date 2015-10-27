@@ -5,6 +5,8 @@ namespace Java2Dotnet.Spider.Extension.Model.Formatter
 {
 	public abstract class BasicTypeFormatter<T> : IObjectFormatter
 	{
+		public IObjectFormatter NextFormatter { get; set; }
+
 		public virtual void InitParam(string[] extra)
 		{
 		}

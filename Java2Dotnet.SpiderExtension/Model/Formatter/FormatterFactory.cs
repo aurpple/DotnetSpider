@@ -5,30 +5,30 @@ namespace Java2Dotnet.Spider.Extension.Model.Formatter
 {
 	public class FormatterFactory
 	{
-		private static readonly Dictionary<string, Type> BasicTypeFormatters = new Dictionary<string, Type>();
+		private static readonly Dictionary<string, IObjectFormatter> BasicTypeFormatters = new Dictionary<string, IObjectFormatter>();
 
 		static FormatterFactory()
 		{
-			BasicTypeFormatters.Add(Types.Int.FullName, typeof(IntegerFormatter));
-			BasicTypeFormatters.Add(Types.Double.FullName, typeof(DoubleFormatter));
-			BasicTypeFormatters.Add(Types.Float.FullName, typeof(FloatFormatter));
-			BasicTypeFormatters.Add(Types.Short.FullName, typeof(ShortFormatter));
-			BasicTypeFormatters.Add(Types.Long.FullName, typeof(LongFormatter));
+			BasicTypeFormatters.Add(Types.Int.FullName, new IntegerFormatter());
+			BasicTypeFormatters.Add(Types.Double.FullName, new DoubleFormatter());
+			BasicTypeFormatters.Add(Types.Float.FullName, new FloatFormatter());
+			BasicTypeFormatters.Add(Types.Short.FullName, new ShortFormatter());
+			BasicTypeFormatters.Add(Types.Long.FullName, new LongFormatter());
 
-			BasicTypeFormatters.Add(Types.NullableInt.FullName, typeof(NullableIntegerFormatter));
-			BasicTypeFormatters.Add(Types.NullableDouble.FullName, typeof(NullableDoubleFormatter));
-			BasicTypeFormatters.Add(Types.NullableFloat.FullName, typeof(NullableFloatFormatter));
-			BasicTypeFormatters.Add(Types.NullableShort.FullName, typeof(NullableShortFormatter));
-			BasicTypeFormatters.Add(Types.NullableLong.FullName, typeof(NullableLongFormatter));
+			BasicTypeFormatters.Add(Types.NullableInt.FullName, new NullableIntegerFormatter());
+			BasicTypeFormatters.Add(Types.NullableDouble.FullName, new NullableDoubleFormatter());
+			BasicTypeFormatters.Add(Types.NullableFloat.FullName, new NullableFloatFormatter());
+			BasicTypeFormatters.Add(Types.NullableShort.FullName, new NullableShortFormatter());
+			BasicTypeFormatters.Add(Types.NullableLong.FullName, new NullableLongFormatter());
 
-			BasicTypeFormatters.Add(Types.Char.FullName, typeof(CharactorFormatter));
-			BasicTypeFormatters.Add(Types.Byte.FullName, typeof(ByteFormatter));
-			BasicTypeFormatters.Add(Types.Bool.FullName, typeof(BooleanFormatter));
-			BasicTypeFormatters.Add(Types.String.FullName, typeof(StringFormatter));
-			BasicTypeFormatters.Add(Types.Datetime.FullName, typeof(DatetimeFormatter));
+			BasicTypeFormatters.Add(Types.Char.FullName, new CharactorFormatter());
+			BasicTypeFormatters.Add(Types.Byte.FullName, new ByteFormatter());
+			BasicTypeFormatters.Add(Types.Bool.FullName, new BooleanFormatter());
+			BasicTypeFormatters.Add(Types.String.FullName, new StringFormatter());
+			BasicTypeFormatters.Add(Types.Datetime.FullName, new DatetimeFormatter());
 		}
 
-		public static Type GetFormatter(Type type)
+		public static IObjectFormatter GetFormatter(Type type)
 		{
 			if (type.IsGenericType)
 			{
@@ -41,7 +41,7 @@ namespace Java2Dotnet.Spider.Extension.Model.Formatter
 			}
 		}
 
-		public static Type GetTerminalFormatter(Type type)
+		public static IObjectFormatter GetTerminalFormatter(Type type)
 		{
 			if (BasicTypeFormatters.ContainsKey(type.FullName))
 			{

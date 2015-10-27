@@ -1,7 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" />
-  <Import Project="..\packages\Antlr4.4.3.0\build\Antlr4.props" Condition="Exists('..\packages\Antlr4.4.3.0\build\Antlr4.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -19,7 +17,8 @@
     <SccProvider>SAK</SccProvider>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <NuGetPackageImportStamp>7166e2a7</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,10 +38,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr4.Runtime.net45, Version=4.3.0.0, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
-      <HintPath>..\packages\Antlr4.Runtime.4.3.0\lib\net45\Antlr4.Runtime.net45.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Dapper, Version=1.40.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Dapper.1.42\lib\net45\Dapper.dll</HintPath>
       <Private>True</Private>
@@ -118,21 +113,20 @@
     <Compile Include="DbSupport\IDataProviderManager.cs" />
     <Compile Include="DbSupport\MySqlDataProvider.cs" />
     <Compile Include="DbSupport\SqlServerDataProvider.cs" />
-    <Antlr4 Include="Grammar\CommonLexerRules.g4">
-      <Generator>MSBuild:Compile</Generator>
-      <CustomToolNamespace>Java2Dotnet.Spider.Extension.Grammar</CustomToolNamespace>
-    </Antlr4>
-    <Compile Include="Grammar\ModifyScriptVisitor.cs" />
-    <Compile Include="Grammar\ValueConverter.cs" />
     <Compile Include="Model\Attribute\Column.cs" />
     <Compile Include="Model\Attribute\ComboExtract.cs" />
     <Compile Include="Model\Attribute\ExtractBy.cs" />
     <Compile Include="Model\Attribute\HelpUrl.cs" />
+    <Compile Include="Model\Attribute\Stoper.cs" />
     <Compile Include="Model\Attribute\Table.cs" />
     <Compile Include="Model\BaseEntity.cs" />
     <Compile Include="Model\ExtractSource.cs" />
+    <Compile Include="Model\Formatter\CustomizeFormatter.cs" />
     <Compile Include="Model\Formatter\FormatterFactory.cs" />
-    <Compile Include="Model\Formatter\ObjectFormatter.cs" />
+    <Compile Include="Model\Formatter\IObjectFormatter.cs" />
+    <Compile Include="Model\Formatter\ReplaceFormatter.cs" />
+    <Compile Include="Model\Formatter\PrefixFormatter.cs" />
+    <Compile Include="Model\Formatter\RegexFormatter.cs" />
     <Compile Include="Model\Formatter\Types.cs" />
     <Compile Include="Model\HasKey.cs" />
     <Compile Include="Monitor\Form1.cs">
@@ -150,6 +144,7 @@
     <Compile Include="Scheduler\RedisSchedulerManager.cs" />
     <Compile Include="Scheduler\SpiderStatus.cs" />
     <Compile Include="Utils\DoubleKeyDictionary.cs" />
+    <Compile Include="Utils\Operator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Pipeline\ISubPipeline.cs" />
@@ -197,10 +192,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Antlr4 Include="Grammar\ModifyScript.g4">
-      <Generator>MSBuild:Compile</Generator>
-      <CustomToolNamespace>Java2Dotnet.Spider.Extension.Grammar</CustomToolNamespace>
-    </Antlr4>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -215,11 +206,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-    <Error Condition="!Exists('..\packages\Antlr4.4.3.0\build\Antlr4.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Antlr4.4.3.0\build\Antlr4.props'))" />
-    <Error Condition="!Exists('..\packages\Antlr4.4.3.0\build\Antlr4.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Antlr4.4.3.0\build\Antlr4.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props'))" />
   </Target>
-  <Import Project="..\packages\Antlr4.4.3.0\build\Antlr4.targets" Condition="Exists('..\packages\Antlr4.4.3.0\build\Antlr4.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

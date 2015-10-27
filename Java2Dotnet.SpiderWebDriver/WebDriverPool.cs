@@ -30,13 +30,11 @@ namespace Java2Dotnet.Spider.WebDriver
 		/**
 		 * store webDrivers created
 		 */
-		private readonly BlockingCollection<IWebDriver> _webDriverList = new BlockingCollection<IWebDriver>();
-		private readonly ConcurrentQueue<IWebDriver> _innerQueue = new ConcurrentQueue<IWebDriver>();
+		private readonly BlockingCollection<WebDriverItem> _webDriverList = new BlockingCollection<WebDriverItem>();
+		private readonly ConcurrentQueue<WebDriverItem> _innerQueue = new ConcurrentQueue<WebDriverItem>();
 		/**
 		 * store webDrivers available
 		 */
-
-
 
 		public WebDriverPool(Browser browser, int capacity = 5)
 		{
@@ -48,10 +46,8 @@ namespace Java2Dotnet.Spider.WebDriver
 		{
 		}
 
-
-		public IWebDriver Get()
+		public WebDriverItem Get()
 		{
-
 			CheckRunning();
 
 			if (_webDriverList.Count < _capacity)
@@ -68,8 +64,8 @@ namespace Java2Dotnet.Spider.WebDriver
 							e = new FirefoxDriver();
 							break;
 					}
-					_innerQueue.Enqueue(e);
-					_webDriverList.Add(e);
+					_innerQueue.Enqueue(new WebDriverItem(e));
+					_webDriverList.Add(new WebDriverItem(e));
 				}
 			}
 
@@ -88,7 +84,7 @@ namespace Java2Dotnet.Spider.WebDriver
 			//	}
 			//}
 
-			IWebDriver webDriver;
+			WebDriverItem webDriver;
 			while (!_innerQueue.TryDequeue(out webDriver))
 			{
 				Thread.Sleep(150);
@@ -97,18 +93,15 @@ namespace Java2Dotnet.Spider.WebDriver
 			return webDriver;
 		}
 
-		public void ReturnToPool(IWebDriver webDriver)
+		public void ReturnToPool(WebDriverItem webDriver)
 		{
 			CheckRunning();
-
 
 			if (_webDriverList.Contains(webDriver))
 			{
 				_innerQueue.Enqueue(webDriver);
 			}
-
 		}
-
 
 		private void CheckRunning()
 		{
@@ -128,7 +121,7 @@ namespace Java2Dotnet.Spider.WebDriver
 					throw new SpiderExceptoin("Already closed!");
 				}
 
-				foreach (IWebDriver webDriver in _webDriverList)
+				foreach (WebDriverItem webDriver in _webDriverList)
 				{
 					_logger.Info("Quit webDriver" + webDriver);
 					Close(webDriver);
@@ -136,14 +129,14 @@ namespace Java2Dotnet.Spider.WebDriver
 			}
 		}
 
-		public void Close(IWebDriver webDriver)
+		public void Close(WebDriverItem webDriver)
 		{
 			try
 			{
 				if (_webDriverList.Contains(webDriver))
 				{
 					_webDriverList.TryTake(out webDriver);
-					webDriver.Quit();
+					webDriver.WebDriver.Quit();
 				}
 			}
 			catch (Exception)

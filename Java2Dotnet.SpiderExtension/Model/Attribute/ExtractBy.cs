@@ -1,4 +1,5 @@
 ﻿using System;
+using Java2Dotnet.Spider.Extension.Model.Formatter;
 
 namespace Java2Dotnet.Spider.Extension.Model.Attribute
 {
@@ -68,6 +69,6 @@ namespace Java2Dotnet.Spider.Extension.Model.Attribute
 
 		public long Count { get; set; } = long.MaxValue;
 
-		public string Expresion { get; set; }
+		//public string Expresion { get; set; }
 	}
 }
