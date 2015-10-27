@@ -11,5 +11,22 @@ namespace Java2Dotnet.Spider.WebDriver
 
 		public IWebDriver WebDriver { get; }
 		public bool IsLogined { get; set; }
+
+		public override int GetHashCode()
+		{
+			return WebDriver.GetHashCode();
+		}
+
+		public override bool Equals(object o)
+		{
+			if (this == o) return true;
+			if (o == null || GetType() != o.GetType()) return false;
+
+			WebDriverItem request = (WebDriverItem)o;
+
+			if (!WebDriver.Equals(request.WebDriver)) return false;
+
+			return true;
+		}
 	}
 }
