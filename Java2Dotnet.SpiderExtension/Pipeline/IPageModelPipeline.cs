@@ -7,6 +7,6 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 	/// </summary>
 	public interface IPageModelPipeline
 	{
-		void Process(dynamic o, ITask task);
+		void Process(dynamic data, ITask task);
 	}
 }

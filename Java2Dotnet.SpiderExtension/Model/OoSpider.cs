@@ -60,7 +60,6 @@ namespace Java2Dotnet.Spider.Extension.Model
 		public OoSpider(string identify, Site site, IPageModelPipeline pageModelPipeline, params Type[] pageModels)
 			: this(identify, ModelPageProcessor.Create(site, pageModels))
 		{
-			// Check ΪʲôҪ���һ��modelpipeline
 			_modelPipeline = new ModelPipeline();
 			
 			AddPipeline(_modelPipeline);

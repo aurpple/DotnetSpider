@@ -36,7 +36,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			Type type = o.GetType();
 			IDataRepository dataRepository = null;
 
-			ArrayList result = new ArrayList();
+			//ArrayList result = new ArrayList();
 			if (!type.IsGenericType)
 			{
 				if (_cache.ContainsKey(type))
@@ -55,7 +55,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 					}
 				}
 				//_collected.Add(o, null);
-				result.Add(o);
+				//result.Add(o);
 			}
 			else
 			{
@@ -79,10 +79,10 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 						}
 					}
 
-					foreach (dynamic o1 in list)
+					for (int i = 0; i < list.Count; ++i)
 					{
 						//_collected.Add(o1, null);
-						result.Add(o1);
+						//result.Add(o1);
 						_totalCount.Inc();
 					}
 				}
@@ -92,12 +92,12 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			{
 				case CollectorType.Insert:
 					{
-						dataRepository?.Insert(result);
+						dataRepository?.Insert(o);
 						break;
 					}
 				case CollectorType.Update:
 					{
-						dataRepository?.Update(result);
+						dataRepository?.Update(o);
 						break;
 					}
 			}

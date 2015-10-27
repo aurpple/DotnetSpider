@@ -6,6 +6,7 @@ using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Utils;
 using log4net;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.PhantomJS;
 
@@ -61,7 +62,18 @@ namespace Java2Dotnet.Spider.WebDriver
 							e = new PhantomJSDriver();
 							break;
 						case Browser.Firefox:
-							e = new FirefoxDriver();
+							FirefoxProfile profile = new FirefoxProfile();
+							profile.SetPreference("permissions.default.stylesheet", 2);
+							profile.SetPreference("permissions.default.image", 2);
+							profile.SetPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false");
+							e = new FirefoxDriver(profile);
+							break;
+						case Browser.Chrome:
+							ChromeDriverService cds = ChromeDriverService.CreateDefaultService();
+							cds.HideCommandPromptWindow = true;
+							ChromeOptions opt = new ChromeOptions();
+							//opt.AddUserProfilePreference("profile", new { default_content_settings = new { images = 2 } });
+							e = new ChromeDriver(cds, opt);
 							break;
 					}
 					_innerQueue.Enqueue(new WebDriverItem(e));

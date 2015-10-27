@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,10 +14,10 @@ namespace Java2Dotnet.Spider.Core
 	/// </summary>
 	public class Site
 	{
-		private readonly IDictionary _defaultCookies = new ListDictionary();
+		private readonly Dictionary<string, string> _defaultCookies = new Dictionary<string, string>();
 		private readonly Dictionary<string, Dictionary<string, string>> _cookies = new Dictionary<string, Dictionary<string, string>>();
 		private readonly HashSet<Request> _startRequests = new HashSet<Request>();
-		private readonly IDictionary _headers = new Hashtable();
+		private readonly Hashtable _headers = new Hashtable();
 		private ProxyPool _httpProxyPool = new ProxyPool();
 
 		//public static Site NewSite()
@@ -34,7 +33,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <returns></returns>
 		public Site AddCookie(string name, string value)
 		{
-			if (_defaultCookies.Contains(name))
+			if (_defaultCookies.ContainsKey(name))
 			{
 				_defaultCookies[name] = value;
 			}

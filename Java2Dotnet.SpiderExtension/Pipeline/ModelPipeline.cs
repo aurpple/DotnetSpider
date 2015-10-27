@@ -25,24 +25,26 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		{
 			foreach (var classPageModelPipelineEntry in _pageModelPipelines)
 			{
-				object o = resultItems.Get(classPageModelPipelineEntry.Key.FullName);
-				if (o != null)
-				{
-					Attribute annotation = classPageModelPipelineEntry.Key.GetCustomAttribute(typeof(ExtractBy), false);
+				object data = resultItems.Get(classPageModelPipelineEntry.Key.FullName);
+				classPageModelPipelineEntry.Value.Process(data, task);
 
-					if (annotation == null || !((ExtractBy)annotation).Multi)
-					{
-						classPageModelPipelineEntry.Value.Process(o, task);
-					}
-					else
-					{
-						IList<object> list = (List<object>)o;
-						foreach (object o1 in list)
-						{
-							classPageModelPipelineEntry.Value.Process(o1, task);
-						}
-					}
-				}
+				//if (data != null)
+				//{
+				//	Attribute annotation = classPageModelPipelineEntry.Key.GetCustomAttribute(typeof(ExtractBy), false);
+
+				//	if (annotation == null || !((ExtractBy)annotation).Multi)
+				//	{
+				//		classPageModelPipelineEntry.Value.Process(data, task);
+				//	}
+				//	else
+				//	{
+				//		IList<object> list = (List<object>)data;
+				//		foreach (object o1 in list)
+				//		{
+				//			classPageModelPipelineEntry.Value.Process(o1, task);
+				//		}
+				//	}
+				//}
 			}
 		}
 	}

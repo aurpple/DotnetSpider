@@ -250,13 +250,18 @@ namespace Java2Dotnet.Spider.Core
 			}
 			if (StartRequests != null)
 			{
-				Parallel.ForEach(StartRequests, new ParallelOptions() { MaxDegreeOfParallelism = 100 }, request =>
+				if (StartRequests.Count > 0)
 				{
-					Scheduler.Push((Request)request.Clone(), this);
-				});
+					Parallel.ForEach(StartRequests, new ParallelOptions() { MaxDegreeOfParallelism = 100 }, request =>
+					{
+						Scheduler.Push((Request)request.Clone(), this);
+					});
 
-				ClearStartRequests();
-				Logger.InfoFormat("Push Request to Scheduler success.");
+					ClearStartRequests();
+					Logger.InfoFormat("Push Request to Scheduler success.");
+				}
+
+				Logger.InfoFormat("Push Zero Request to Scheduler.");
 			}
 
 			if (!_registConsoleCtrlHandler)

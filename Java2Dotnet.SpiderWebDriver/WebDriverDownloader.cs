@@ -12,7 +12,8 @@ namespace Java2Dotnet.Spider.WebDriver
 	public enum Browser
 	{
 		Firefox,
-		Phantomjs
+		Phantomjs,
+		Chrome
 	}
 
 	public class WebDriverDownloader : BaseDownloader
@@ -107,7 +108,7 @@ namespace Java2Dotnet.Spider.WebDriver
 
 		public override void Dispose()
 		{
-			_webDriverPool.CloseAll();
+			_webDriverPool?.CloseAll();
 		}
 
 		private void CheckInit()
