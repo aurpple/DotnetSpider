@@ -50,7 +50,7 @@ namespace Java2Dotnet.Spider.Core.Selector
 		public RegexResult SelectGroup(string text)
 		{
 			var match = _regex.Match(text);
-			return new RegexResult((from Group g in match.Groups select g.Value).ToArray());
+			return new RegexResult(_regex.ToString(), (from Group g in match.Groups select g.Value).ToList());
 		}
 
 		public IList<RegexResult> SelectGroupList(string text)
@@ -62,7 +62,7 @@ namespace Java2Dotnet.Spider.Core.Selector
 			{
 				foreach (Match m in matches)
 				{
-					resultList.Add(new RegexResult((from Group g in m.Groups select g.Value).ToArray()));
+					resultList.Add(new RegexResult(_regex.ToString(), (from Group @group in m.Groups select @group.Value).ToList()));
 				}
 			}
 

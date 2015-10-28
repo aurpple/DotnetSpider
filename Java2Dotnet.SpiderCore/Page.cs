@@ -165,6 +165,8 @@ namespace Java2Dotnet.Spider.Core
 			_url = url;
 		}
 
+		public string TargetUrl { get; set; }
+
 		/// <summary>
 		/// Get request of current page
 		/// </summary>

@@ -56,7 +56,6 @@ namespace Java2Dotnet.Spider.Core.Downloader
 				if (StatusAccept(acceptStatCode, statusCode))
 				{
 					Page page = HandleResponse(request, charset, response, statusCode, task);
-
 					// 结束后要置空, 这个值存到Redis会导置无限循环跑单个任务
 					request.PutExtra(Request.CycleTriedTimes, null);
 
@@ -218,6 +217,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			content = HttpUtility.UrlDecode(HttpUtility.HtmlDecode(content), charset);
 			Page page = new Page(request);
 			page.SetRawText(content);
+			page.TargetUrl = response.ResponseUri.ToString();
 			page.SetUrl(new PlainText(request.Url));
 			page.SetStatusCode(statusCode);
 			return page;
