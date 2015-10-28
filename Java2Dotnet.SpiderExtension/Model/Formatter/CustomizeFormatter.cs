@@ -17,6 +17,11 @@ namespace Java2Dotnet.Spider.Extension.Model.Formatter
 
 		public virtual dynamic Format(string raw)
 		{
+			if (string.IsNullOrEmpty(raw))
+			{
+				return null;
+			}
+
 			HtmlDocument document = new HtmlDocument();
 			document.LoadHtml(raw);
 			if (NextFormatter != null)

@@ -285,193 +285,186 @@ namespace Java2Dotnet.Spider.Extension.Model
 
 		private object ProcessSingle(Page page, string html, bool isRaw)
 		{
-			object o = null;
-			try
+			object o = Activator.CreateInstance(_modelType);
+			foreach (FieldExtractor fieldExtractor in _fieldExtractors)
 			{
-				o = Activator.CreateInstance(_modelType);
-				foreach (FieldExtractor fieldExtractor in _fieldExtractors)
+				if (fieldExtractor.Multi)
 				{
-					if (fieldExtractor.Multi)
+					IList<string> value = null;
+					switch (fieldExtractor.Source)
 					{
-						IList<string> value = null;
-						switch (fieldExtractor.Source)
+						case ExtractSource.RawHtml:
+							value = page.GetHtml().SelectDocumentForList(fieldExtractor.Selector);
+							break;
+						case ExtractSource.Html:
+							value = isRaw ? page.GetHtml().SelectDocumentForList(fieldExtractor.Selector) : fieldExtractor.Selector.SelectList(html);
+							break;
+						case ExtractSource.Url:
+							value = fieldExtractor.Selector.SelectList(page.GetUrl().ToString());
+							break;
+						case ExtractSource.Enviroment:
+							{
+								EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
+								if (selector != null) value = selector.GetValueList(page);
+								break;
+							}
+						default:
+							value = fieldExtractor.Selector.SelectList(html);
+							break;
+					}
+					if ((value == null || value.Count == 0) && fieldExtractor.NotNull)
+					{
+						return null;
+					}
+
+					if (fieldExtractor.ObjectFormatter != null)
+					{
+						//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
+						//{
+						//	MemoryStream stream = new MemoryStream();
+						//	StreamWriter writer = new StreamWriter(stream);
+						//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
+						//	writer.Flush();
+
+						//	// convert stream to string  
+						//	stream.Position = 0;
+						//	AntlrInputStream input = new AntlrInputStream(stream);
+						//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
+						//	CommonTokenStream tokens = new CommonTokenStream(lexer);
+						//	// implement custom expresion
+						//	IList<string> tmp = new List<string>();
+						//	bool missTargetUrls = false;
+						//	// ReSharper disable once PossibleNullReferenceException
+						//	foreach (string d in value)
+						//	{
+						//		lexer.Reset();
+						//		tokens.Reset();
+
+						//		ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d, fieldExtractor.Field);
+						//		ModifyScriptParser parser = new ModifyScriptParser(tokens);
+						//		modifyScriptVisitor.Visit(parser.stats());
+						//		if (!string.IsNullOrEmpty(modifyScriptVisitor.Value))
+						//		{
+						//			tmp.Add(modifyScriptVisitor.Value);
+						//		}
+						//		if (!missTargetUrls && modifyScriptVisitor.NeedStop)
+						//		{
+						//			missTargetUrls = true;
+						//		}
+						//	}
+						//	page.MissTargetUrls = missTargetUrls;
+						//	value = tmp;
+						//}
+
+						IList<dynamic> converted = Convert(value, fieldExtractor.ObjectFormatter);
+
+						if (fieldExtractor.Stoper != null)
 						{
-							case ExtractSource.RawHtml:
-								value = page.GetHtml().SelectDocumentForList(fieldExtractor.Selector);
-								break;
-							case ExtractSource.Html:
-								value = isRaw ? page.GetHtml().SelectDocumentForList(fieldExtractor.Selector) : fieldExtractor.Selector.SelectList(html);
-								break;
-							case ExtractSource.Url:
-								value = fieldExtractor.Selector.SelectList(page.GetUrl().ToString());
-								break;
-							case ExtractSource.Enviroment:
+							foreach (string d in converted)
+							{
+								if (fieldExtractor.Stoper.NeedStop(d) && !page.MissTargetUrls)
 								{
-									EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
-									if (selector != null) value = selector.GetValueList(page);
+									page.MissTargetUrls = true;
 									break;
 								}
-							default:
-								value = fieldExtractor.Selector.SelectList(html);
-								break;
-						}
-						if ((value == null || value.Count == 0) && fieldExtractor.NotNull)
-						{
-							return null;
-						}
-
-						if (fieldExtractor.ObjectFormatter != null)
-						{
-							//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
-							//{
-							//	MemoryStream stream = new MemoryStream();
-							//	StreamWriter writer = new StreamWriter(stream);
-							//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
-							//	writer.Flush();
-
-							//	// convert stream to string  
-							//	stream.Position = 0;
-							//	AntlrInputStream input = new AntlrInputStream(stream);
-							//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
-							//	CommonTokenStream tokens = new CommonTokenStream(lexer);
-							//	// implement custom expresion
-							//	IList<string> tmp = new List<string>();
-							//	bool missTargetUrls = false;
-							//	// ReSharper disable once PossibleNullReferenceException
-							//	foreach (string d in value)
-							//	{
-							//		lexer.Reset();
-							//		tokens.Reset();
-
-							//		ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d, fieldExtractor.Field);
-							//		ModifyScriptParser parser = new ModifyScriptParser(tokens);
-							//		modifyScriptVisitor.Visit(parser.stats());
-							//		if (!string.IsNullOrEmpty(modifyScriptVisitor.Value))
-							//		{
-							//			tmp.Add(modifyScriptVisitor.Value);
-							//		}
-							//		if (!missTargetUrls && modifyScriptVisitor.NeedStop)
-							//		{
-							//			missTargetUrls = true;
-							//		}
-							//	}
-							//	page.MissTargetUrls = missTargetUrls;
-							//	value = tmp;
-							//}
-
-							IList<dynamic> converted = Convert(value, fieldExtractor.ObjectFormatter);
-
-							if (fieldExtractor.Stoper != null)
-							{
-								foreach (string d in converted)
-								{
-									if (fieldExtractor.Stoper.NeedStop(d) && !page.MissTargetUrls)
-									{
-										page.MissTargetUrls = true;
-										break;
-									}
-								}
 							}
-
-							dynamic field = fieldExtractor.Field.GetValue(o) ?? Activator.CreateInstance(fieldExtractor.Field.PropertyType);
-
-							Type[] genericType = fieldExtractor.Field.PropertyType.GetGenericArguments();
-							MethodInfo method = fieldExtractor.Field.PropertyType.GetMethod("Add", genericType);
-							foreach (var v in converted)
-							{
-								method.Invoke(field, new object[] { v });
-							}
-
-							fieldExtractor.Field.SetValue(o, field);
 						}
-						else
+
+						dynamic field = fieldExtractor.Field.GetValue(o) ?? Activator.CreateInstance(fieldExtractor.Field.PropertyType);
+
+						Type[] genericType = fieldExtractor.Field.PropertyType.GetGenericArguments();
+						MethodInfo method = fieldExtractor.Field.PropertyType.GetMethod("Add", genericType);
+						foreach (var v in converted)
 						{
-							fieldExtractor.Field.SetValue(o, value);
+							method.Invoke(field, new object[] { v });
 						}
+
+						fieldExtractor.Field.SetValue(o, field);
 					}
 					else
 					{
-						string value = null;
-						switch (fieldExtractor.Source)
-						{
-							case ExtractSource.RawHtml:
-								value = page.GetHtml().SelectDocument(fieldExtractor.Selector);
-								break;
-							case ExtractSource.Html:
-								value = isRaw ? page.GetHtml().SelectDocument(fieldExtractor.Selector) : fieldExtractor.Selector.Select(html);
-								break;
-							case ExtractSource.Url:
-								value = fieldExtractor.Selector.Select(page.GetUrl().ToString());
-								break;
-							case ExtractSource.Enviroment:
+						fieldExtractor.Field.SetValue(o, value);
+					}
+				}
+				else
+				{
+					string value = null;
+					switch (fieldExtractor.Source)
+					{
+						case ExtractSource.RawHtml:
+							value = page.GetHtml().SelectDocument(fieldExtractor.Selector);
+							break;
+						case ExtractSource.Html:
+							value = isRaw ? page.GetHtml().SelectDocument(fieldExtractor.Selector) : fieldExtractor.Selector.Select(html);
+							break;
+						case ExtractSource.Url:
+							value = fieldExtractor.Selector.Select(page.GetUrl().ToString());
+							break;
+						case ExtractSource.Enviroment:
+							{
+								EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
+								if (selector != null)
 								{
-									EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
-									if (selector != null)
-									{
-										value = selector.GetValue(page)?.ToString();
-									}
-									break;
+									value = selector.GetValue(page)?.ToString();
 								}
-							default:
-								value = fieldExtractor.Selector.Select(html);
 								break;
-						}
-						if (value == null && fieldExtractor.NotNull)
+							}
+						default:
+							value = fieldExtractor.Selector.Select(html);
+							break;
+					}
+					if (value == null && fieldExtractor.NotNull)
+					{
+						return null;
+					}
+					if (fieldExtractor.ObjectFormatter != null)
+					{
+						//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
+						//{
+						//	MemoryStream stream = new MemoryStream();
+						//	StreamWriter writer = new StreamWriter(stream);
+						//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
+						//	writer.Flush();
+
+						//	// convert stream to string  
+						//	stream.Position = 0;
+						//	AntlrInputStream input = new AntlrInputStream(stream);
+
+						//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
+						//	CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+						//	ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value, fieldExtractor.Field);
+						//	ModifyScriptParser parser = new ModifyScriptParser(tokens);
+
+						//	modifyScriptVisitor.Visit(parser.stats());
+						//	value = modifyScriptVisitor.Value;
+						//	page.MissTargetUrls = modifyScriptVisitor.NeedStop;
+						//}
+
+						dynamic converted = Convert(value, fieldExtractor.ObjectFormatter);
+
+						if (converted == null && fieldExtractor.NotNull)
 						{
 							return null;
 						}
-						if (fieldExtractor.ObjectFormatter != null)
+
+						if (fieldExtractor.Stoper != null && !page.MissTargetUrls)
 						{
-							//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
-							//{
-							//	MemoryStream stream = new MemoryStream();
-							//	StreamWriter writer = new StreamWriter(stream);
-							//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
-							//	writer.Flush();
-
-							//	// convert stream to string  
-							//	stream.Position = 0;
-							//	AntlrInputStream input = new AntlrInputStream(stream);
-
-							//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
-							//	CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-							//	ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value, fieldExtractor.Field);
-							//	ModifyScriptParser parser = new ModifyScriptParser(tokens);
-
-							//	modifyScriptVisitor.Visit(parser.stats());
-							//	value = modifyScriptVisitor.Value;
-							//	page.MissTargetUrls = modifyScriptVisitor.NeedStop;
-							//}
-
-							dynamic converted = Convert(value, fieldExtractor.ObjectFormatter);
-
-							if (converted == null && fieldExtractor.NotNull)
-							{
-								return null;
-							}
-
-							if (fieldExtractor.Stoper != null && !page.MissTargetUrls)
-							{
-								page.MissTargetUrls = fieldExtractor.Stoper.NeedStop(converted);
-							}
-
-							fieldExtractor.Field.SetValue(o, converted);
+							page.MissTargetUrls = fieldExtractor.Stoper.NeedStop(converted);
 						}
-						else
-						{
-							fieldExtractor.Field.SetValue(o, value);
-						}
+
+						fieldExtractor.Field.SetValue(o, converted);
+					}
+					else
+					{
+						fieldExtractor.Field.SetValue(o, value);
 					}
 				}
+			}
 
-				IAfterExtractor afterExtractor = o as IAfterExtractor;
-				afterExtractor?.AfterProcess(page);
-			}
-			catch (Exception e)
-			{
-				Logger.Error("Extract fail", e);
-			}
+			IAfterExtractor afterExtractor = o as IAfterExtractor;
+			afterExtractor?.AfterProcess(page);
+
 			return o;
 		}
 

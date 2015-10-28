@@ -488,74 +488,135 @@ namespace Java2Dotnet.Spider.Core
 			}
 		}
 
+		/// <summary>
+		/// 把Downloader+PageProcess合并为一个原子操作，如果失败则扔回Scheduler中重复执行
+		/// </summary>
+		/// <param name="request"></param>
+		/// <param name="cts"></param>
 		protected void ProcessRequest(Request request, CancellationTokenSource cts = null)
 		{
-			cts?.Cancel();
-
-			//Stopwatch watch = new Stopwatch();
-			//watch.Start();
-
-			// 下载页面
-			Page page = Downloader.Download(request, this);
-
-			//watch.Stop();
-			//Logger.Info("dowloader cost time:" + watch.ElapsedMilliseconds);
-
-			cts?.Cancel();
-			if (page == null)
+			Page page = null;
+			try
 			{
-				Sleep(_site.SleepTime);
-				OnError(request);
-				return;
+				cts?.Cancel();
+
+				//Stopwatch watch = new Stopwatch();
+				//watch.Start();
+
+				// 下载页面
+				page = Downloader.Download(request, this);
+
+				//watch.Stop();
+				//Logger.Info("dowloader cost time:" + watch.ElapsedMilliseconds);
+
+				cts?.Cancel();
+
+				//if (page == null)
+				//{
+				//	Sleep(_site.SleepTime);
+				//	OnError(request);
+				//	return;
+				//}
+
+				//// for cycle retry, 这个下载出错时, 会把自身Request扔回TargetUrls中做重复任务。所以此时，targetRequests只有本身
+				//// 而不需要考虑 MissTargetUrls的情况
+				//if (page.IsNeedCycleRetry())
+				//{
+				//	ExtractAndAddRequests(page, true);
+				//	Sleep(_site.SleepTime);
+				//	return;
+				//}
+
+				//watch = new Stopwatch();
+				//watch.Start();
+
+				// 解析页面数据
+				PageProcessor.Process(page);
+
+				//watch.Stop();
+				//Logger.Info("process cost time:" + watch.ElapsedMilliseconds);
+
+				cts?.Cancel();
+
+				//watch = new Stopwatch();
+				//watch.Start();
 			}
-			// for cycle retry, 这个下载出错时, 会把自身Request扔回TargetUrls中做重复任务。所以此时，targetRequests只有本身
-			// 而不需要考虑 MissTargetUrls的情况
-			if (page.IsNeedCycleRetry())
+			catch (Exception e)
 			{
-				ExtractAndAddRequests(page, true);
-				Sleep(_site.SleepTime);
-				return;
-			}
-
-			//watch = new Stopwatch();
-			//watch.Start();
-
-			// 解析页面数据
-			PageProcessor.Process(page);
-
-			//watch.Stop();
-			//Logger.Info("process cost time:" + watch.ElapsedMilliseconds);
-
-			cts?.Cancel();
-
-			if (page.MissTargetUrls)
-			{
-				Logger.Info($"Stoper trigger worked on this page.");
-				ExtractAndAddRequests(page, SpawnUrl);
-			}
-
-			cts?.Cancel();
-
-			//watch = new Stopwatch();
-			//watch.Start();
-
-			if (!page.GetResultItems().IsSkip)
-			{
-				foreach (IPipeline pipeline in Pipelines)
+				if (Site.CycleRetryTimes > 0)
 				{
-					pipeline.Process(page.GetResultItems(), this);
+					page = AddToCycleRetry(request, Site);
+					Logger.Warn($"Request {request.Url} failed. Will retry it.");
 				}
-				//cts?.Cancel();
+				else
+				{
+					throw;
+				}
 			}
-			else
+			finally
 			{
-				Logger.Warn($"Request {request.Url} 's result count is zero.");
+				if (page != null)
+				{
+					//如果Page为空，则说明代码有问题, 抛异常研究是必要的
+					// 如果触发停止器则不需要考虑往下走了
+					if (page.MissTargetUrls)
+					{
+						Logger.Info($"Stoper trigger worked on this page.");
+					}
+					else
+					{
+						ExtractAndAddRequests(page, SpawnUrl);
+					}
+				}
+			}
+
+			if (page != null)
+			{
+				if (!page.GetResultItems().IsSkip)
+				{
+					foreach (IPipeline pipeline in Pipelines)
+					{
+						pipeline.Process(page.GetResultItems(), this);
+					}
+					//cts?.Cancel();
+				}
+				else
+				{
+					Logger.Warn($"Request {request.Url} 's result count is zero.");
+				}
 			}
 
 			//watch.Stop();
 			//Logger.Info("pipeline cost time:" + watch.ElapsedMilliseconds);
 
 			Sleep(_site.SleepTime);
+		}
+
+		protected Page AddToCycleRetry(Request request, Site site)
+		{
+			Page page = new Page(request);
+			dynamic cycleTriedTimesObject = request.GetExtra(Request.CycleTriedTimes);
+			if (cycleTriedTimesObject == null)
+			{
+				// 把自己加到目标Request中(无法控制主线程再加载此Request), 传到主线程后会把TargetRequest加到Pool中
+				request.Priority = 0;
+				page.AddTargetRequest(request.PutExtra(Request.CycleTriedTimes, 1));
+			}
+			else
+			{
+				int cycleTriedTimes = (int)cycleTriedTimesObject;
+				cycleTriedTimes++;
+				if (cycleTriedTimes >= site.CycleRetryTimes)
+				{
+					// 超过最大尝试次数, 返回空.
+					return null;
+				}
+				request.Priority = 0;
+				page.AddTargetRequest(request.PutExtra(Request.CycleTriedTimes, cycleTriedTimes));
+			}
+			page.SetNeedCycleRetry(true);
+			page.SetSkip(true);
+			return page;
 		}
 
 		protected void Sleep(int time)

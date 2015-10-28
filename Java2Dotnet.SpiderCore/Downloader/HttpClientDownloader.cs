@@ -49,7 +49,6 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			HttpWebResponse response = null;
 			try
 			{
-				throw  new Exception("test");
 				HttpWebRequest httpWebRequest = GetHttpWebRequest(request, site, headers);
 				response = (HttpWebResponse)httpWebRequest.GetResponse();
 				statusCode = (int)response.StatusCode;
@@ -70,15 +69,16 @@ namespace Java2Dotnet.Spider.Core.Downloader
 					throw new SpiderExceptoin("Download failed.");
 				}
 			}
-			catch (Exception e)
-			{
-				if (site.CycleRetryTimes > 0)
-				{
-					return AddToCycleRetry(request, site);
-				}
-				OnError(request, e);
-				return null;
-			}
+			// 应该把整个流程当成一个原子操作, 如果出错则加回Scheduler中重新调度
+			//catch (Exception e)
+			//{
+			//	if (site.CycleRetryTimes > 0)
+			//	{
+			//		return AddToCycleRetry(request, site);
+			//	}
+			//	OnError(request, e);
+			//	return null;
+			//}
 			finally
 			{
 				request.PutExtra(Request.StatusCode, statusCode);

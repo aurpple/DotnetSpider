@@ -34,7 +34,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 		protected Page AddToCycleRetry(Request request, Site site)
 		{
 			Page page = new Page(request);
-			object cycleTriedTimesObject = request.GetExtra(Request.CycleTriedTimes);
+			dynamic cycleTriedTimesObject = request.GetExtra(Request.CycleTriedTimes);
 			if (cycleTriedTimesObject == null)
 			{
 				// 把自己加到目标Request中(无法控制主线程再加载此Request), 传到主线程后会把TargetRequest加到Pool中

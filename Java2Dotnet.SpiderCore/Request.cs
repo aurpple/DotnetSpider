@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Web;
 using Java2Dotnet.Spider.Core.Utils;
 
@@ -12,9 +13,9 @@ namespace Java2Dotnet.Spider.Core
 	[Serializable]
 	public class Request : IDisposable, ICloneable
 	{
-		public const string CycleTriedTimes = "_cycle_tried_times";
-		public const string StatusCode = "statusCode";
-		public const string Proxy = "proxy";
+		public const string CycleTriedTimes = "983009ae-baee-467b-92cd-44188da2b021";
+		public const string StatusCode = "02d71099-b897-49dd-a180-55345fe9abfc";
+		public const string Proxy = "6f09c4d6-167a-4272-8208-8a59bebdfe33";
 
 		private const string Deep = "deep";
 
@@ -23,7 +24,12 @@ namespace Java2Dotnet.Spider.Core
 		public Request(string url, int grade, IDictionary<string, dynamic> extras)
 		{
 			_url = HttpUtility.HtmlDecode(url);
-			Extras = extras;
+
+			foreach (var extra in extras)
+			{
+				PutExtra(extra.Key, extra.Value);
+			}
+
 			PutExtra(Deep, grade);
 		}
 
@@ -39,6 +45,7 @@ namespace Java2Dotnet.Spider.Core
 		[Experimental]
 		public long Priority { get; set; }
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public dynamic GetExtra(string key)
 		{
 			if (Extras == null)
@@ -53,6 +60,7 @@ namespace Java2Dotnet.Spider.Core
 			return null;
 		}
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public Request PutExtra(string key, dynamic value)
 		{
 			if (Extras == null)
@@ -75,7 +83,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <summary>
 		/// Store additional information in extras.
 		/// </summary>
-		public IDictionary<string, dynamic> Extras { get; private set; }
+		public Dictionary<string, dynamic> Extras { get; set; }
 
 		/// <summary>
 		/// The http method of the request. Get for default.
@@ -121,6 +129,7 @@ namespace Java2Dotnet.Spider.Core
 					'}';
 		}
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public object Clone()
 		{
 			IDictionary<string, dynamic> extras = new Dictionary<string, dynamic>();
