@@ -165,6 +165,8 @@ namespace Java2Dotnet.Spider.Core
 			}
 		}
 
+		public bool ShowConsoleProcessStatus { get; set; }
+
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public bool ShowControl { get; set; }
 
@@ -319,9 +321,23 @@ namespace Java2Dotnet.Spider.Core
 			Logger.Info("Spider " + Identify + " InitComponent...");
 			InitComponent();
 
-			//IMonitorableScheduler monitor = (IMonitorableScheduler)Scheduler;
+			IMonitorableScheduler monitor = (IMonitorableScheduler)Scheduler;
 
 			Logger.Info("Spider " + Identify + " Started!");
+
+			if (ShowConsoleProcessStatus)
+			{
+				Task.Factory.StartNew(() =>
+				{
+					while (true)
+					{
+						Console.ForegroundColor = ConsoleColor.Green;
+						Console.WriteLine($"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
+						Console.ResetColor();
+						Thread.Sleep(800);
+					}
+				});
+			}
 
 			bool firstTask = false;
 			while (Stat.Value == StatRunning)
@@ -354,8 +370,6 @@ namespace Java2Dotnet.Spider.Core
 
 					ThreadPool.Execute((obj, cts) =>
 					{
-						//Logger.Info(
-						//	$"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
 						var request1 = obj as Request;
 						if (request1 != null)
 						{
@@ -742,11 +756,15 @@ namespace Java2Dotnet.Spider.Core
 		{
 			if (Stat.CompareAndSet(StatRunning, StatStopped))
 			{
-				Logger.Info("Spider " + Identify + " stop success!");
+				Console.ForegroundColor = ConsoleColor.Yellow;
+				Console.WriteLine("Spider " + Identify + " stop success!");
+				Console.ResetColor();
 			}
 			else
 			{
+				Console.ForegroundColor = ConsoleColor.Red;
 				Logger.Info("Spider " + Identify + " stop fail!");
+				Console.ResetColor();
 			}
 		}
 
