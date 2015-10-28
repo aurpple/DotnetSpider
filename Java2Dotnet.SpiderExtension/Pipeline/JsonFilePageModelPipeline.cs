@@ -47,7 +47,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 					//check
 					filename = path + Encrypt.Md5Encrypt(o.ToString()) + ".json";
 				}
-				FileInfo file = GetFile(filename);
+				FileInfo file = PrepareFile(filename);
 				using (StreamWriter printWriter = new StreamWriter(file.OpenWrite(), Encoding.UTF8))
 				{
 					printWriter.WriteLine(JsonConvert.SerializeObject(o));

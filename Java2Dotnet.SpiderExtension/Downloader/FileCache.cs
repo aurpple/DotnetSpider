@@ -45,7 +45,7 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			Page page;
 			try
 			{
-				FileInfo file = GetFile(path + Encrypt.Md5Encrypt(request.Url));
+				FileInfo file = PrepareFile(path + Encrypt.Md5Encrypt(request.Url));
 
 				StreamReader bufferedReader = new StreamReader(file.OpenRead());
 				string line = bufferedReader.ReadLine();
@@ -108,7 +108,7 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			string path = BasePath + PathSeperator + task.Identify + PathSeperator;
 			try
 			{
-				FileInfo fileInfo = GetFile(path + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
+				FileInfo fileInfo = PrepareFile(path + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
 				using (StreamWriter writer = new StreamWriter(fileInfo.OpenWrite(), Encoding.UTF8))
 				{
 					writer.WriteLine("url:\t" + resultItems.Request.Url);

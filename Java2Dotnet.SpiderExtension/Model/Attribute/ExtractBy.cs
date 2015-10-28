@@ -1,5 +1,4 @@
 ﻿using System;
-using Java2Dotnet.Spider.Extension.Model.Formatter;
 
 namespace Java2Dotnet.Spider.Extension.Model.Attribute
 {
@@ -60,10 +59,7 @@ namespace Java2Dotnet.Spider.Extension.Model.Attribute
 
 		/// <summary>
 		/// Define whether the extractor return more than one result.
-		/// When set to 'true', the extractor return a list of string (so you should define the field as List). 
-		/// 
-		/// Deprecated since 0.4.2. This option is determined automatically by the class of field.
-		/// @deprecated since 0.4.2
+		/// It works only if you already added 'ExtractBy' to Class.   
 		/// </summary>
 		public bool Multi { get; set; }
 

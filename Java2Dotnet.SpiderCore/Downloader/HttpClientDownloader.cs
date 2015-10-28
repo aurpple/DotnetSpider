@@ -69,16 +69,15 @@ namespace Java2Dotnet.Spider.Core.Downloader
 					throw new SpiderExceptoin("Download failed.");
 				}
 			}
-			// 应该把整个流程当成一个原子操作, 如果出错则加回Scheduler中重新调度
-			//catch (Exception e)
-			//{
-			//	if (site.CycleRetryTimes > 0)
-			//	{
-			//		return AddToCycleRetry(request, site);
-			//	}
-			//	OnError(request, e);
-			//	return null;
-			//}
+			catch (Exception e)
+			{
+				if (site.CycleRetryTimes > 0)
+				{
+					return AddToCycleRetry(request, site);
+				}
+				OnError(request, e);
+				return null;
+			}
 			finally
 			{
 				request.PutExtra(Request.StatusCode, statusCode);

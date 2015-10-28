@@ -34,7 +34,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 			string filePath = BasePath + PathSeperator + task.Identify + PathSeperator;
 			try
 			{
-				FileInfo file = GetFile(filePath + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
+				FileInfo file = PrepareFile(filePath + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
 				using (StreamWriter printWriter = new StreamWriter(file.OpenWrite(), Encoding.UTF8))
 				{
 					printWriter.WriteLine("url:\t" + resultItems.Request.Url);

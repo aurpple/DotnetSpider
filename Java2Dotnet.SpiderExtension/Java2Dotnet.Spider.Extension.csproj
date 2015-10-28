@@ -42,10 +42,6 @@
       <HintPath>..\packages\Dapper.1.42\lib\net45\Dapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\DocumentFormat.OpenXml.2.5\lib\DocumentFormat.OpenXml.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.4.9\lib\Net45\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
@@ -143,12 +139,12 @@
     <Compile Include="Monitor\SpiderStatus.cs" />
     <Compile Include="Monitor\ISpiderStatus.cs" />
     <Compile Include="MultiPageModel.cs" />
+    <Compile Include="Pipeline\CollectorPageModelPipeline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scheduler\ISchedulerManager.cs" />
     <Compile Include="Scheduler\RedisSchedulerManager.cs" />
     <Compile Include="Scheduler\SpiderStatus.cs" />
     <Compile Include="Utils\DoubleKeyDictionary.cs" />
-    <Compile Include="Utils\ExcelClient.cs" />
     <Compile Include="Utils\Operator.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -182,7 +178,7 @@
     <Compile Include="Pipeline\ModelPipeline.cs" />
     <Compile Include="Pipeline\PageModelCollectorPipeline.cs" />
     <Compile Include="Pipeline\ConsolePageModelPipeline.cs" />
-    <Compile Include="Pipeline\CollectorPageModelToDbPipeline.cs" />
+    <Compile Include="Pipeline\PageModelToDbPipeline.cs" />
     <Compile Include="Monitor\SpiderMonitor.cs" />
   </ItemGroup>
   <ItemGroup>

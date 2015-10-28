@@ -13,7 +13,7 @@ namespace Java2Dotnet.Spider.Core.Utils
 	/// IsCaseSensitive：是否区分大小写。
 	/// 方法：此类提供MD5，SHA1，SHA256，SHA512等四种算法，加密字串的长度依次增大。
 	/// </summary>
-	public class Encrypt
+	public static class Encrypt
 	{
 		public static string Md5Encrypt(string myString)
 		{

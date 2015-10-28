@@ -31,7 +31,7 @@ namespace Java2Dotnet.Spider.Samples.Model
 			site.SleepTime = 0;
 			site.RetryTimes = 3;
 
-			OoSpider.Create(site, new CollectorPageModelToDbPipeline(),typeof(OschinaBlog)).SetThreadNum(1).Run();
+			OoSpider.Create(site, new PageModelToDbPipeline(),typeof(OschinaBlog)).SetThreadNum(1).Run();
 		}
 
 		private class TestPageModelPipeline : IPageModelPipeline

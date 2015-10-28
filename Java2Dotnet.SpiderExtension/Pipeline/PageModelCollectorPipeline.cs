@@ -5,9 +5,9 @@ using Java2Dotnet.Spider.Core.Pipeline;
 
 namespace Java2Dotnet.Spider.Extension.Pipeline
 {
-	public class PageModelCollectorPipeline : ICollectorPipeline
+	public sealed class PageModelCollectorPipeline : ICollectorPipeline
 	{
-		private readonly CollectorPageModelToDbPipeline _classPipeline = new CollectorPageModelToDbPipeline();
+		private readonly CollectorPageModelPipeline _collectorPipeline = new CollectorPageModelPipeline();
 		private readonly Type _type;
 
 		public PageModelCollectorPipeline(Type type)
@@ -17,17 +17,17 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 
 		public ICollection GetCollected()
 		{
-			return _classPipeline.GetCollected();
+			return _collectorPipeline.GetCollected();
 		}
 
 		//[MethodImplAttribute(MethodImplOptions.Synchronized)]
-		public virtual void Process(ResultItems resultItems, ITask task)
+		public void Process(ResultItems resultItems, ITask task)
 		{
 			dynamic o = resultItems.Get(_type.FullName);
 			if (o != null)
 			{
 				//check
-				_classPipeline.Process(o, task);
+				_collectorPipeline.Process(o, task);
 			}
 		}
 	}

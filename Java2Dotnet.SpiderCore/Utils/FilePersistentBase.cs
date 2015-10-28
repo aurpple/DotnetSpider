@@ -21,13 +21,13 @@ namespace Java2Dotnet.Spider.Core.Utils
 			BasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
 		}
 
-		public FileInfo GetFile(string fullName)
+		public static FileInfo PrepareFile(string fullName)
 		{
 			CheckAndMakeParentDirecotry(fullName);
 			return new FileInfo(fullName);
 		}
 
-		public void CheckAndMakeParentDirecotry(string fullName)
+		public static void CheckAndMakeParentDirecotry(string fullName)
 		{
 			string path = Path.GetDirectoryName(fullName);
 

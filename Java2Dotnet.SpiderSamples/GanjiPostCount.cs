@@ -11,7 +11,7 @@ namespace Java2Dotnet.Spider.Samples
 			OoSpider ooSpider = OoSpider.Create(new Site
 			{
 				SleepTime = 10000
-			}, new CollectorPageModelToDbPipeline(), typeof(Ganji));
+			}, new PageModelToDbPipeline(), typeof(Ganji));
 			ooSpider.SetThreadNum(1);
 			Request request = new Request("http://mobds.ganji.com/datashare/", 1, null);
 			request.Method = "POST";

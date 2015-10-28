@@ -50,7 +50,7 @@ namespace Java2Dotnet.Spider.Core.Selector
 		public RegexResult SelectGroup(string text)
 		{
 			var match = _regex.Match(text);
-			return new RegexResult((from Group g in match.Groups select g?.Value).ToArray());
+			return new RegexResult((from Group g in match.Groups select g.Value).ToArray());
 		}
 
 		public IList<RegexResult> SelectGroupList(string text)

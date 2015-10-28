@@ -20,7 +20,7 @@ namespace Java2Dotnet.Spider.Samples
 		public static void RunTask()
 		{
 			OoSpider ooSpider = OoSpider.Create("aiqiyi_movies_" + DateTime.Now.ToLocalTime().ToString(),
-				new Site { SleepTime = 1000, Encoding = Encoding.UTF8 }, new CollectorPageModelToDbPipeline(), typeof(walter));
+				new Site { SleepTime = 1000, Encoding = Encoding.UTF8 }, new PageModelToDbPipeline(), typeof(walter));
 			ooSpider.SetEmptySleepTime(15000);
 			ooSpider.SetThreadNum(10);
 			ooSpider.SetScheduler(new RedisScheduler("localhost", null));

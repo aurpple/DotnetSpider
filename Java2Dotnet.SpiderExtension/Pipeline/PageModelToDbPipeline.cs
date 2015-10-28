@@ -16,13 +16,13 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		Update
 	}
 
-	public sealed class CollectorPageModelToDbPipeline : IPageModelPipeline
+	public sealed class PageModelToDbPipeline : IPageModelPipeline
 	{
-		private CollectorType _type;
+		private readonly CollectorType _type;
 
 		public long TotalCount => _totalCount.Value;
 
-		public CollectorPageModelToDbPipeline(CollectorType type = CollectorType.Insert)
+		public PageModelToDbPipeline(CollectorType type = CollectorType.Insert)
 		{
 			_type = type;
 		}
