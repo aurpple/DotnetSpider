@@ -743,7 +743,7 @@ namespace Java2Dotnet.Spider.Core
 			//	return;
 			//}
 
-			Thread.Sleep(1000);
+			Thread.Sleep(50);
 			++_waitCount;
 		}
 
@@ -915,7 +915,7 @@ namespace Java2Dotnet.Spider.Core
 		{
 			if (emptySleepTime > 10000)
 			{
-				_waitCountLimit = emptySleepTime / 1000;
+				_waitCountLimit = emptySleepTime / 50;
 			}
 			else
 			{
