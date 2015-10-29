@@ -1,3 +1,10 @@
+2015-10-29 Lewis.Zou
+
+1. 可以Sub Html中的Json当成文本源加载到Page
+2. 加入CachedPipeline, 实现缓存数据后再操作
+3. 修复各种BUG
+
+
 2015-10-27 Lewis.Zou
 
 1. 删除了Antrl4的部分，以后不需要依赖JAVA JDK了
