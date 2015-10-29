@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Downloader;
@@ -21,12 +24,36 @@ namespace Java2Dotnet.Spider.WebDriver
 		private volatile WebDriverPool _webDriverPool;
 		private readonly int _webDriverWaitTime;
 		private readonly Browser _browser;
+
+		public bool LoadImage { get; set; } = true;
+
 		public Func<IWebDriver, bool> LoginFunc;
 
 		public WebDriverDownloader(Browser browser = Browser.Phantomjs, int webDriverWaitTime = 200)
 		{
 			_webDriverWaitTime = webDriverWaitTime;
 			_browser = browser;
+
+			Task.Factory.StartNew(() =>
+			{
+				while (true)
+				{
+					Process[] faultProcesses = Process.GetProcessesByName("WerFault.exe");
+					foreach (var process in faultProcesses)
+					{
+						try
+						{
+							process.Kill();
+						}
+						catch (Exception)
+						{
+							// ignored
+						}
+					}
+
+					Thread.Sleep(500);
+				}
+			});
 		}
 
 		public override Page Download(Request request, ITask task)
@@ -69,7 +96,7 @@ namespace Java2Dotnet.Spider.WebDriver
 				webDriver.WebDriver.Navigate().GoToUrl(realUrl);
 
 				string resultUrl = webDriver.WebDriver.Url;
-				if (resultUrl.Contains("error") || resultUrl.Contains("login") || resultUrl.Contains("//www.tmall.com"))
+				if (resultUrl.Contains("error") || resultUrl.Contains("login") || resultUrl.Contains("//www.tmall.com") || resultUrl.Contains("//alisec.tmall.com"))
 				{
 					Logger.Error("Url error: " + realUrl);
 					_webDriverPool.Close(webDriver);
@@ -93,11 +120,11 @@ namespace Java2Dotnet.Spider.WebDriver
 			}
 			catch (Exception e)
 			{
+				OnError(request, e);
 				if (site.CycleRetryTimes > 0)
 				{
 					return AddToCycleRetry(request, site);
 				}
-				OnError(request, e);
 				return null;
 			}
 			finally
@@ -117,7 +144,7 @@ namespace Java2Dotnet.Spider.WebDriver
 			{
 				lock (this)
 				{
-					_webDriverPool = new WebDriverPool(_browser, ThreadNum);
+					_webDriverPool = new WebDriverPool(_browser, ThreadNum, LoadImage);
 				}
 			}
 		}

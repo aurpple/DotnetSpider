@@ -25,9 +25,12 @@ namespace Java2Dotnet.Spider.Core
 		{
 			_url = HttpUtility.HtmlDecode(url);
 
-			foreach (var extra in extras)
+			if (extras != null)
 			{
-				PutExtra(extra.Key, extra.Value);
+				foreach (var extra in extras)
+				{
+					PutExtra(extra.Key, extra.Value);
+				}
 			}
 
 			PutExtra(Deep, grade);

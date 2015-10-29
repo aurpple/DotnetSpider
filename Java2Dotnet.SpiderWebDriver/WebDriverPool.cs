@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Utils;
+using Java2Dotnet.Spider.Lib;
 using log4net;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -64,14 +66,16 @@ namespace Java2Dotnet.Spider.WebDriver
 						case Browser.Phantomjs:
 							e = new PhantomJSDriver();
 							break;
-						case Browser.Firefox:
+						case Browser.Firefox:							
 							FirefoxProfile profile = new FirefoxProfile();
+							//profile.AlwaysLoadNoFocusLibrary = true;
+							profile.SetPreference("permissions.default.stylesheet", 2);
 							if (!_loadPicture)
 							{
-								profile.SetPreference("permissions.default.stylesheet", 2);
 								profile.SetPreference("permissions.default.image", 2);
-								profile.SetPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false");
 							}
+							profile.SetPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false");
+
 							e = new FirefoxDriver(profile);
 							break;
 						case Browser.Chrome:
@@ -80,7 +84,7 @@ namespace Java2Dotnet.Spider.WebDriver
 							ChromeOptions opt = new ChromeOptions();
 							if (!_loadPicture)
 							{
-								opt.AddUserProfilePreference("profile", new {default_content_settings = new {images = 2}});
+								opt.AddUserProfilePreference("profile", new { default_content_settings = new { images = 2 } });
 							}
 							e = new ChromeDriver(cds, opt);
 							break;

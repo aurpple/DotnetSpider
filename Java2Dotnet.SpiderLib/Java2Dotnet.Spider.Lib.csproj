@@ -50,6 +50,7 @@
     <Compile Include="BlockingQueue.cs" />
     <Compile Include="BloomFilter.cs" />
     <Compile Include="DateTimeUtil.cs" />
+    <Compile Include="DictoryExtension.cs" />
     <Compile Include="ObjectUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

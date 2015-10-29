@@ -336,6 +336,7 @@ namespace Java2Dotnet.Spider.Core
 						Console.ResetColor();
 						Thread.Sleep(800);
 					}
+					// ReSharper disable once FunctionNeverReturns
 				});
 			}
 
@@ -690,7 +691,14 @@ namespace Java2Dotnet.Spider.Core
 
 			ICollection collection = collectorPipeline.GetCollected();
 
-			return (from object o in collection select (T)o).ToList();
+			try
+			{
+				return (from object current in collection select (T)current).ToList();
+			}
+			catch (Exception)
+			{
+				throw new SpiderExceptoin($"Your pipeline didn't extract data to model: {typeof(T).FullName}");
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.Synchronized)]

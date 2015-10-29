@@ -18,6 +18,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 
 			if (_cached.Count > CachedSize)
 			{
+				// 做成异步
 				Process(_cached, task);
 				_cached.Clear();
 			}
