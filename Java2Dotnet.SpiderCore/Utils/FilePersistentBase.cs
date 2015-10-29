@@ -10,9 +10,9 @@ namespace Java2Dotnet.Spider.Core.Utils
 	{
 		protected string BasePath;
 
-		public static string PathSeperator = "/";
+		protected static string PathSeperator = "/";
 
-		public void SetPath(string path)
+		protected void SetPath(string path)
 		{
 			if (!path.EndsWith(PathSeperator))
 			{
@@ -27,7 +27,7 @@ namespace Java2Dotnet.Spider.Core.Utils
 			return new FileInfo(fullName);
 		}
 
-		public static void CheckAndMakeParentDirecotry(string fullName)
+		private static void CheckAndMakeParentDirecotry(string fullName)
 		{
 			string path = Path.GetDirectoryName(fullName);
 

@@ -59,11 +59,13 @@ namespace Java2Dotnet.Spider.WebDriver
 		public override Page Download(Request request, ITask task)
 		{
 			CheckInit();
-			Site site = task.Site;
+
 			WebDriverItem webDriver = null;
+
 			try
 			{
 				webDriver = _webDriverPool.Get();
+				Site site = task.Site;				
 				if (!webDriver.IsLogined && LoginFunc != null)
 				{
 					webDriver.IsLogined = LoginFunc.Invoke(webDriver.WebDriver);
@@ -96,7 +98,8 @@ namespace Java2Dotnet.Spider.WebDriver
 				webDriver.WebDriver.Navigate().GoToUrl(realUrl);
 
 				string resultUrl = webDriver.WebDriver.Url;
-				if (resultUrl.Contains("error") || resultUrl.Contains("login") || resultUrl.Contains("//www.tmall.com") || resultUrl.Contains("//alisec.tmall.com"))
+				if (resultUrl.Contains("error") || resultUrl.Contains("login") || resultUrl.Contains("//www.tmall.com") ||
+					resultUrl.Contains("//alisec.tmall.com"))
 				{
 					Logger.Error("Url error: " + realUrl);
 					_webDriverPool.Close(webDriver);
@@ -117,15 +120,6 @@ namespace Java2Dotnet.Spider.WebDriver
 				request.PutExtra(Request.CycleTriedTimes, null);
 
 				return page;
-			}
-			catch (Exception e)
-			{
-				OnError(request, e);
-				if (site.CycleRetryTimes > 0)
-				{
-					return AddToCycleRetry(request, site);
-				}
-				return null;
 			}
 			finally
 			{

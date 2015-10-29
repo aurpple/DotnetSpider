@@ -8,12 +8,7 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 	/// </summary>
 	public abstract class DuplicateRemovedScheduler : IScheduler
 	{
-		protected static ILog Logger;
-
-		protected DuplicateRemovedScheduler()
-		{
-			Logger = LogManager.GetLogger(GetType());
-		}
+		protected static ILog Logger = LogManager.GetLogger(typeof(DuplicateRemovedScheduler));
 
 		protected IDuplicateRemover DuplicateRemover { get; set; } = new HashSetDuplicateRemover();
 

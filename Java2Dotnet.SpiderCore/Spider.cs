@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -43,7 +44,7 @@ namespace Java2Dotnet.Spider.Core
 	/// </summary>
 	public class Spider : ITask
 	{
-		public event Flush FlushEvent;
+		public event FlushCachedPipeline FlushEvent;
 
 		[DllImport("User32.dll ", EntryPoint = "FindWindow")]
 		private static extern int FindWindow(string lpClassName, string lpWindowName);
@@ -84,6 +85,7 @@ namespace Java2Dotnet.Spider.Core
 		private int _waitCount;
 		private string _identify;
 		private readonly Site _site;
+		private Regex _subHtmlRegex;
 
 		/// <summary>
 		/// Create a spider with pageProcessor.
@@ -165,7 +167,12 @@ namespace Java2Dotnet.Spider.Core
 			}
 		}
 
-		public bool ShowConsoleProcessStatus { get; set; }
+		public void SetSubHtmlRegex(string pattern)
+		{
+			_subHtmlRegex = new Regex(pattern);
+		}
+
+		public bool ShowConsoleProcessStatus { get; set; } = true;
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public bool ShowControl { get; set; }
@@ -202,7 +209,7 @@ namespace Java2Dotnet.Spider.Core
 		public Spider AddPipeline(IPipeline pipeline)
 		{
 			CheckIfRunning();
-			AbstractCachedPipeline cachedPipeline = pipeline as AbstractCachedPipeline;
+			CachedPipeline cachedPipeline = pipeline as CachedPipeline;
 			if (cachedPipeline != null)
 			{
 				FlushEvent += cachedPipeline.Flush;
@@ -525,15 +532,60 @@ namespace Java2Dotnet.Spider.Core
 			}
 		}
 
+		protected Page AddToCycleRetry(Request request, Site site)
+		{
+			Page page = new Page(request);
+			dynamic cycleTriedTimesObject = request.GetExtra(Request.CycleTriedTimes);
+			if (cycleTriedTimesObject == null)
+			{
+				// 把自己加到目标Request中(无法控制主线程再加载此Request), 传到主线程后会把TargetRequest加到Pool中
+				request.Priority = 0;
+				page.AddTargetRequest(request.PutExtra(Request.CycleTriedTimes, 1));
+			}
+			else
+			{
+				int cycleTriedTimes = (int)cycleTriedTimesObject;
+				cycleTriedTimes++;
+				if (cycleTriedTimes >= site.CycleRetryTimes)
+				{
+					// 超过最大尝试次数, 返回空.
+					return null;
+				}
+				request.Priority = 0;
+				page.AddTargetRequest(request.PutExtra(Request.CycleTriedTimes, cycleTriedTimes));
+			}
+			page.SetNeedCycleRetry(true);
+			return page;
+		}
+
 		protected void ProcessRequest(Request request, CancellationTokenSource cts = null)
 		{
 			cts?.Cancel();
 
+			Page page = null;
+
 			//Stopwatch watch = new Stopwatch();
 			//watch.Start();
+			try
+			{
+				// 下载页面
+				page = Downloader.Download(request, this);
 
-			// 下载页面
-			Page page = Downloader.Download(request, this);
+				// 处理HTML截取
+				if (_subHtmlRegex != null)
+				{
+					page.SetRawText(_subHtmlRegex.Match(page.GetRawText()).Value);
+				}
+			}
+			catch (Exception e)
+			{
+				if (_site.CycleRetryTimes > 0)
+				{
+					page = AddToCycleRetry(request, _site);
+				}
+
+				Logger.Warn("Download page " + request.Url + " failed.", e);
+			}
 
 			//watch.Stop();
 			//Logger.Info("dowloader cost time:" + watch.ElapsedMilliseconds);
@@ -558,7 +610,7 @@ namespace Java2Dotnet.Spider.Core
 			//watch.Start();
 
 			// 解析页面数据
-			// PageProcess中不能把异常吃掉, 必须抛出来, 抛出来后则下面的 ExtractAndAddRequests 也不能添加成功, 刚好重新加入Scheduler重来.
+			// PageProcess中2种错误：1 下载的HTML有误 2是实现的IPageProcessor有误
 			PageProcessor.Process(page);
 
 			//watch.Stop();
@@ -667,12 +719,40 @@ namespace Java2Dotnet.Spider.Core
 			return this;
 		}
 
-		/// <summary>
-		/// Download urls synchronizing.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="urls"></param>
-		/// <returns></returns>
+		///// <summary>
+		///// Download urls synchronizing.
+		///// </summary>
+		///// <typeparam name="T"></typeparam>
+		///// <param name="urls"></param>
+		///// <returns></returns>
+		//public IList<T> GetAll<T>(params string[] urls)
+		//{
+		//	DestroyWhenExit = false;
+		//	SpawnUrl = false;
+
+		//	foreach (Request request in UrlUtils.ConvertToRequests(urls, 1))
+		//	{
+		//		AddRequest(request);
+		//	}
+		//	ICollectorPipeline collectorPipeline = GetCollectorPipeline<T>();
+		//	Pipelines.Clear();
+		//	Pipelines.Add(collectorPipeline);
+		//	Run();
+		//	SpawnUrl = true;
+		//	DestroyWhenExit = true;
+
+		//	ICollection collection = collectorPipeline.GetCollected();
+
+		//	try
+		//	{
+		//		return (from object current in collection select (T)current).ToList();
+		//	}
+		//	catch (Exception)
+		//	{
+		//		throw new SpiderExceptoin($"Your pipeline didn't extract data to model: {typeof(T).FullName}");
+		//	}
+		//}
+
 		public IList<T> GetAll<T>(params string[] urls)
 		{
 			DestroyWhenExit = false;

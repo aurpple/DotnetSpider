@@ -12,16 +12,16 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 	/// Store results in files.
 	/// </summary>
 	[Synchronization]
-	public class FilePipeline : FilePersistentBase, IPipeline
+	public sealed class FilePipeline : FilePersistentBase, IPipeline
 	{
-		private readonly ILog _logger = LogManager.GetLogger(typeof(FilePipeline));
+		private static readonly ILog Logger = LogManager.GetLogger(typeof(FilePipeline));
 
 		/// <summary>
 		/// create a FilePipeline with default path"/data/webmagic/"
 		/// </summary>
 		public FilePipeline()
 		{
-			SetPath("/data/dotnetspider/");
+			SetPath(@"\data\dotnetspider\");
 		}
 
 		public FilePipeline(string path)
@@ -29,7 +29,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 			SetPath(path);
 		}
 
-		public virtual void Process(ResultItems resultItems, ITask task)
+		public void Process(ResultItems resultItems, ITask task)
 		{
 			string filePath = BasePath + PathSeperator + task.Identify + PathSeperator;
 			try
@@ -60,7 +60,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 			}
 			catch (Exception e)
 			{
-				_logger.Warn("Write file error.", e);
+				Logger.Warn("Write file error.", e);
 				throw;
 			}
 		}
