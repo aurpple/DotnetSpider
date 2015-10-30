@@ -1,3 +1,7 @@
+2015-10-30 Lewis.Zou
+1. ModelPipelin 改为缓存机制，默认为1即不启用缓存
+2. 删除, 合并一些Db相关的类
+
 2015-10-29 Lewis.Zou
 
 1. 可以Sub Html中的Json当成文本源加载到Page
