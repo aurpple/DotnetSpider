@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Reflection;
 using Java2Dotnet.Spider.Core.Selector;
 using Java2Dotnet.Spider.Extension.Model.Attribute;

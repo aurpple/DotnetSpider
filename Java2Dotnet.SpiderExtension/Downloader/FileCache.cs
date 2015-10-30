@@ -18,10 +18,9 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 	{
 		private IDownloader _downloaderWhenFileMiss;
 		private readonly IPageProcessor _pageProcessor;
-		private readonly ILog _logger = LogManager.GetLogger(typeof(FileCache));
 
 		public FileCache(string startUrl, string urlPattern)
-			: this(startUrl, urlPattern, "/data/webmagic/temp/")
+			: this(startUrl, urlPattern, "/data/dotnetspider/temp/")
 		{
 		}
 
@@ -61,11 +60,11 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			{
 				if (e.GetType().IsInstanceOfType(typeof(FileNotFoundException)))
 				{
-					_logger.Info("File not exist for url " + request.Url);
+					Logger.Info("File not exist for url " + request.Url);
 				}
 				else
 				{
-					_logger.Warn("File read error for url " + request.Url, e);
+					Logger.Warn("File read error for url " + request.Url, e);
 				}
 			}
 			page = DownloadWhenMiss(request, task);
@@ -117,7 +116,7 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			}
 			catch (IOException e)
 			{
-				_logger.Warn("write file error", e);
+				Logger.Warn("write file error", e);
 			}
 		}
 

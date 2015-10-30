@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Utils;
@@ -30,48 +31,24 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 
 		private readonly AutomicLong _totalCount = new AutomicLong(0);
 
-		public void Process(dynamic data, ITask task)
+		public void Process(Dictionary<Type, List<dynamic>> data, ITask task)
 		{
 			if (data == null)
 			{
 				return;
 			}
 
-			Type type = data.GetType();
-			IDataRepository dataRepository = null;
-
-			if (!type.IsGenericType)
+			foreach (var pair in data)
 			{
-				if (_cache.ContainsKey(type))
-				{
-					dataRepository = _cache[type];
-					_totalCount.Inc();
-				}
-				else
-				{
-					if (type.GetCustomAttribute(typeof(StoredAs)) != null)
-					{
-						dataRepository = new DataRepository(DbProviderUtil.GetProvider, type);
-						dataRepository.CreateSheme();
-						dataRepository.CreateTable();
-						_cache.TryAdd(type, dataRepository);
-					}
-					else
-					{
-						throw new SpiderExceptoin("Didn't define TableName( StoreAs attribute) in the Type: " + type.FullName);
-					}
-				}
-			}
-			else
-			{
-				IList list = (IList)data;
-				if (list.Count > 0)
-				{
-					type = type.GetGenericTypeDefinition();
+				Type type = pair.Key;
+				IDataRepository dataRepository = null;
 
+				if (!type.IsGenericType)
+				{
 					if (_cache.ContainsKey(type))
 					{
 						dataRepository = _cache[type];
+						_totalCount.Inc();
 					}
 					else
 					{
@@ -87,28 +64,52 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 							throw new SpiderExceptoin("Didn't define TableName( StoreAs attribute) in the Type: " + type.FullName);
 						}
 					}
-
-					for (int i = 0; i < list.Count; ++i)
+				}
+				else
+				{
+					IList list = pair.Value;
+					if (list.Count > 0)
 					{
-						//_collected.Add(o1, null);
-						//result.Add(o1);
-						_totalCount.Inc();
+						type = type.GetGenericTypeDefinition();
+
+						if (_cache.ContainsKey(type))
+						{
+							dataRepository = _cache[type];
+						}
+						else
+						{
+							if (type.GetCustomAttribute(typeof(StoredAs)) != null)
+							{
+								dataRepository = new DataRepository(DbProviderUtil.GetProvider, type);
+								dataRepository.CreateSheme();
+								dataRepository.CreateTable();
+								_cache.TryAdd(type, dataRepository);
+							}
+							else
+							{
+								throw new SpiderExceptoin("Didn't define TableName( StoreAs attribute) in the Type: " + type.FullName);
+							}
+						}
+
+						for (int i = 0; i < list.Count; ++i)
+						{
+							_totalCount.Inc();
+						}
 					}
 				}
-			}
-
-			switch (_operateType)
-			{
-				case OperateType.Insert:
-					{
-						dataRepository?.Insert(data);
-						break;
-					}
-				case OperateType.Update:
-					{
-						dataRepository?.Update(data);
-						break;
-					}
+				switch (_operateType)
+				{
+					case OperateType.Insert:
+						{
+							dataRepository?.Insert(pair.Value);
+							break;
+						}
+					case OperateType.Update:
+						{
+							dataRepository?.Update(pair.Value);
+							break;
+						}
+				}
 			}
 		}
 	}

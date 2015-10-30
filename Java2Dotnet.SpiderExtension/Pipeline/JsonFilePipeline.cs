@@ -12,7 +12,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 	/// </summary>
 	public class JsonFilePipeline : FilePersistentBase, IPipeline
 	{
-		private readonly log4net.ILog _logger = log4net.LogManager.GetLogger(typeof(JsonFilePipeline));
+		private static readonly log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(JsonFilePipeline));
 
 		/// <summary>
 		/// New JsonFilePageModelPipeline with default path "/data/webmagic/"
@@ -40,7 +40,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			}
 			catch (IOException e)
 			{
-				_logger.Warn("write file error", e);
+				Logger.Warn("write file error", e);
 				throw;
 			}
 		}

@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using log4net;
 
 namespace Java2Dotnet.Spider.Core.Selector
 {
 	public abstract class AbstractSelectable : ISelectable
 	{
+		protected static readonly ILog Logger = LogManager.GetLogger("Selectable");
+
 		protected abstract IList<string> GetSourceTexts();
 		public abstract ISelectable XPath(string xpath);
 		public abstract ISelectable Css(string selector);

@@ -8,25 +8,28 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 {
 	public class CollectorPageModelPipeline : IPageModelPipeline
 	{
-		private readonly List<dynamic> _list = new List<dynamic>();
+		private readonly Dictionary<Type, List<dynamic>> _collector = new Dictionary<Type, List<dynamic>>();
 
 		[MethodImpl(MethodImplOptions.Synchronized)]
-		public void Process(dynamic obj, ITask task)
+		public void Process(Dictionary<Type, List<dynamic>> data, ITask task)
 		{
-			Type type = obj.GetType();
-			if (type.IsGenericType)
+			foreach (var pair in data)
 			{
-				_list.AddRange(obj);
-			}
-			else
-			{
-				_list.Add(obj);
+				Type type = pair.Key;
+				if (_collector.ContainsKey(type))
+				{
+					_collector[type].AddRange(pair.Value);
+				}
+				else
+				{
+					_collector.Add(type, new List<dynamic>(pair.Value));
+				}
 			}
 		}
 
 		public ICollection GetCollected()
 		{
-			return _list;
+			return _collector;
 		}
 	}
 }

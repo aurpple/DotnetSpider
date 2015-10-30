@@ -62,7 +62,7 @@ namespace Java2Dotnet.Spider.Core
 		protected IScheduler Scheduler { get; set; } = new QueueScheduler();
 		public int ThreadNum { get; set; } = 1;
 		public int Deep { get; set; } = int.MaxValue;
-		protected static ILog Logger;
+		protected static ILog Logger = LogManager.GetLogger(typeof(Spider));
 
 		protected readonly static int StatInit = 0;
 		protected readonly static int StatRunning = 1;
@@ -115,7 +115,6 @@ namespace Java2Dotnet.Spider.Core
 		/// <param name="pageProcessor"></param>
 		protected Spider(string identify, IPageProcessor pageProcessor)
 		{
-			Logger = LogManager.GetLogger(typeof(Spider));
 			_waitCount = 0;
 			PageProcessor = pageProcessor;
 			_site = pageProcessor.Site;

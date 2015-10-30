@@ -28,20 +28,36 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 
 			foreach (var pipelineEntry in _pageModelPipelines)
 			{
-				List<dynamic> valueList = new List<dynamic>();
+				Dictionary<Type, List<dynamic>> resultDictionary = new Dictionary<Type, List<dynamic>>();
 				foreach (var resultItems in resultItemsList)
 				{
 					dynamic data = resultItems.Get(pipelineEntry.Key.FullName);
+					Type type = data.GetType();
 					if (data.GetType().IsGenericType)
 					{
-						valueList.AddRange(data);
+						type = type.GetGenericTypeDefinition();
+						if (resultDictionary.ContainsKey(type))
+						{
+							resultDictionary[type].AddRange(data);
+						}
+						else
+						{
+							resultDictionary.Add(type, new List<dynamic> (data));
+						}
 					}
 					else
 					{
-						valueList.Add(data);
+						if (resultDictionary.ContainsKey(type))
+						{
+							resultDictionary[type].Add(data);
+						}
+						else
+						{
+							resultDictionary.Add(type, new List<dynamic> { data });
+						}
 					}
 				}
-				pipelineEntry.Value.Process(valueList, task);
+				pipelineEntry.Value.Process(resultDictionary, task);
 			}
 		}
 	}

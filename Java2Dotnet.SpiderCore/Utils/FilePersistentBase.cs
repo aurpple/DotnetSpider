@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using log4net;
 
 namespace Java2Dotnet.Spider.Core.Utils
 {
@@ -8,6 +9,7 @@ namespace Java2Dotnet.Spider.Core.Utils
 	/// </summary>
 	public class FilePersistentBase : ContextBoundObject
 	{
+		protected readonly ILog Logger = LogManager.GetLogger(typeof(FilePersistentBase));
 		protected string BasePath;
 
 		protected static string PathSeperator = "/";

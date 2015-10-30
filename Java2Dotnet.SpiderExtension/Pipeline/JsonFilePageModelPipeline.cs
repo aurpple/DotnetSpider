@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Java2Dotnet.Spider.Core;
@@ -31,32 +32,26 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			SetPath(path);
 		}
 
-		public void Process(object o, ITask task)
+		public void Process(Dictionary<Type, List<dynamic>> data, ITask task)
 		{
-			string path = BasePath + "/" + task.Identify + "/";
-			try
+			foreach (var pair in data)
 			{
-				string filename;
-				var key = o as IHasKey;
-				if (key != null)
+				string path = BasePath + "/" + task.Identify + "/";
+				try
 				{
-					filename = path + key.Key + ".json";
+					string filename = path + pair.Key.FullName + ".json";
+
+					FileInfo file = PrepareFile(filename);
+					using (StreamWriter printWriter = new StreamWriter(file.OpenWrite(), Encoding.UTF8))
+					{
+						printWriter.WriteLine(JsonConvert.SerializeObject(pair.Value));
+					}
 				}
-				else
+				catch (Exception e)
 				{
-					//check
-					filename = path + Encrypt.Md5Encrypt(o.ToString()) + ".json";
+					_logger.Warn("write file error", e);
+					throw;
 				}
-				FileInfo file = PrepareFile(filename);
-				using (StreamWriter printWriter = new StreamWriter(file.OpenWrite(), Encoding.UTF8))
-				{
-					printWriter.WriteLine(JsonConvert.SerializeObject(o));
-				}
-			}
-			catch (Exception e)
-			{
-				_logger.Warn("write file error", e);
-				throw;
 			}
 		}
 	}

@@ -126,7 +126,6 @@
     <Compile Include="Model\Formatter\PrefixFormatter.cs" />
     <Compile Include="Model\Formatter\RegexFormatter.cs" />
     <Compile Include="Model\Formatter\Types.cs" />
-    <Compile Include="Model\HasKey.cs" />
     <Compile Include="Monitor\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
