@@ -12,7 +12,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 
 		private readonly List<ResultItems> _cached = new List<ResultItems>();
 
-		public int CachedSize { get; set; } = 1000;
+		public int CachedSize { get; set; } = 1;
 
 		[MethodImpl(MethodImplOptions.Synchronized)]
 		public void Process(ResultItems resultItems, ITask task)
