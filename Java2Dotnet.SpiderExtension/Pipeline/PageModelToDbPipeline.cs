@@ -7,10 +7,11 @@ using Java2Dotnet.Spider.Core.Utils;
 using Java2Dotnet.Spider.Extension.DbSupport;
 using Java2Dotnet.Spider.Extension.DbSupport.Dapper;
 using Java2Dotnet.Spider.Extension.DbSupport.Dapper.Attributes;
+using Java2Dotnet.Spider.Extension.Model.Formatter;
 
 namespace Java2Dotnet.Spider.Extension.Pipeline
 {
-	public enum CollectorType
+	public enum OperateType
 	{
 		Insert,
 		Update
@@ -18,25 +19,27 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 
 	public sealed class PageModelToDbPipeline : IPageModelPipeline
 	{
-		private readonly CollectorType _type;
-
+		private readonly OperateType _operateType;
 		public long TotalCount => _totalCount.Value;
+		private readonly ConcurrentDictionary<Type, IDataRepository> _cache = new ConcurrentDictionary<Type, IDataRepository>();
 
-		public PageModelToDbPipeline(CollectorType type = CollectorType.Insert)
+		public PageModelToDbPipeline(OperateType operateType = OperateType.Insert)
 		{
-			_type = type;
+			_operateType = operateType;
 		}
 
 		private readonly AutomicLong _totalCount = new AutomicLong(0);
-		//private readonly Hashtable _collected = new Hashtable();
-		private readonly ConcurrentDictionary<Type, IDataRepository> _cache = new ConcurrentDictionary<Type, IDataRepository>();
 
-		public void Process(dynamic o, ITask task)
+		public void Process(dynamic data, ITask task)
 		{
-			Type type = o.GetType();
+			if (data == null)
+			{
+				return;
+			}
+
+			Type type = data.GetType();
 			IDataRepository dataRepository = null;
 
-			//ArrayList result = new ArrayList();
 			if (!type.IsGenericType)
 			{
 				if (_cache.ContainsKey(type))
@@ -53,16 +56,18 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 						dataRepository.CreateTable();
 						_cache.TryAdd(type, dataRepository);
 					}
+					else
+					{
+						throw new SpiderExceptoin("Didn't define TableName( StoreAs attribute) in the Type: " + type.FullName);
+					}
 				}
-				//_collected.Add(o, null);
-				//result.Add(o);
 			}
 			else
 			{
-				IList list = (IList)o;
+				IList list = (IList)data;
 				if (list.Count > 0)
 				{
-					type = list[0].GetType();
+					type = type.GetGenericTypeDefinition();
 
 					if (_cache.ContainsKey(type))
 					{
@@ -77,6 +82,10 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 							dataRepository.CreateTable();
 							_cache.TryAdd(type, dataRepository);
 						}
+						else
+						{
+							throw new SpiderExceptoin("Didn't define TableName( StoreAs attribute) in the Type: " + type.FullName);
+						}
 					}
 
 					for (int i = 0; i < list.Count; ++i)
@@ -88,26 +97,19 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 				}
 			}
 
-			switch (_type)
+			switch (_operateType)
 			{
-				case CollectorType.Insert:
+				case OperateType.Insert:
 					{
-						dataRepository?.Insert(o);
+						dataRepository?.Insert(data);
 						break;
 					}
-				case CollectorType.Update:
+				case OperateType.Update:
 					{
-						dataRepository?.Update(o);
+						dataRepository?.Update(data);
 						break;
 					}
 			}
-		}
-
-		public ICollection GetCollected()
-		{
-			//return _collected.Keys;
-			//SAVE HUGE OBJECTS TO MEMORY
-			return null;
 		}
 	}
 }

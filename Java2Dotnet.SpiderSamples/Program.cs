@@ -55,9 +55,9 @@ namespace Java2Dotnet.Spider.Samples
 			// 必须指定Provider
 			DbProviderUtil.Provider = new DataProviderManager().LoadDataProvider();
 
-			SingleSample.RunTask();
+			//SingleSample.RunTask();
             
-			//Ganji.RunTask();
+			Ganji.RunTask();
 			//News163.Run();
 			//OschinaAnswer.Run();
 

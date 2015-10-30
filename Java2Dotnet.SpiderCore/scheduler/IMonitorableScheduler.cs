@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Java2Dotnet.Spider.Core.Scheduler 
 {
 	/// <summary>
@@ -5,8 +7,10 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 	/// </summary>
 	public interface IMonitorableScheduler : IScheduler
 	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		int GetLeftRequestsCount(ITask task);
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		int GetTotalRequestsCount(ITask task);
 	}
 }

@@ -338,10 +338,19 @@ namespace Java2Dotnet.Spider.Core
 				{
 					while (true)
 					{
-						Console.ForegroundColor = ConsoleColor.Green;
-						Console.WriteLine($"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
-						Console.ResetColor();
-						Thread.Sleep(800);
+						try
+						{
+							Console.ForegroundColor = ConsoleColor.Green;
+							Console.WriteLine(
+								$"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
+							Console.ResetColor();
+							Thread.Sleep(800);
+						}
+						catch
+						{
+							Thread.Sleep(800);
+							// ignored
+						}
 					}
 					// ReSharper disable once FunctionNeverReturns
 				});

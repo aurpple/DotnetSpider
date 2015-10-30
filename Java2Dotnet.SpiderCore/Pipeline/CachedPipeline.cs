@@ -19,7 +19,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 		{
 			_cached.Add(resultItems);
 
-			if (_cached.Count > CachedSize)
+			if (_cached.Count >= CachedSize)
 			{
 				// 做成异步
 				Process(_cached, task);

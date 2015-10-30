@@ -75,6 +75,8 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 		}
 
+		public ModelPipeline ModelPipeline => _modelPipeline;
+
 		protected override ICollectorPipeline GetCollectorPipeline<T>()
 		{
 			return new PageModelCollectorPipeline(_pageModelTypes.First(t => t.FullName == typeof(T).FullName));
