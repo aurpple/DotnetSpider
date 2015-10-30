@@ -5,7 +5,7 @@ using MySql.Data.MySqlClient;
 
 namespace Java2Dotnet.Spider.Extension.DbSupport
 {
-	public class MySqlDataProvider : BaseDataProvider
+	public class MySqlDataProvider : IDataProvider
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(MySqlDataProvider));
 		private readonly string _host;
@@ -17,7 +17,7 @@ namespace Java2Dotnet.Spider.Extension.DbSupport
 			_host = new MySqlConnection(settings.DataConnectionString).DataSource;
 		}
 
-		public override IDbConnection CreateConnection()
+		public IDbConnection CreateConnection()
 		{
 			try
 			{
@@ -32,21 +32,7 @@ namespace Java2Dotnet.Spider.Extension.DbSupport
 			}
 		}
 
-		public override IDbConnection CreateConnection(string connStr)
-		{
-			try
-			{
-				MySqlConnection cnn = new MySqlConnection(connStr);
-				cnn.Open();
-				return cnn;
-			}
-			catch
-			{
-				return null;
-			}
-		}
-
-		public override string GetHost()
+		public string GetHost()
 		{
 			return _host;
 		}

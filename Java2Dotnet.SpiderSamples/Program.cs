@@ -53,7 +53,7 @@ namespace Java2Dotnet.Spider.Samples
 		static void Main(string[] args)
 		{
 			// 必须指定Provider
-			DbProviderUtil.Provider = new DapperDataProviderManager().LoadDataProvider();
+			DbProviderUtil.Provider = new DataProviderManager().LoadDataProvider();
 
 			SingleSample.RunTask();
             
