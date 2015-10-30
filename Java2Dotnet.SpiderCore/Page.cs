@@ -31,6 +31,8 @@ namespace Java2Dotnet.Spider.Core
 
 		private ISelectable _url;
 
+		private ISelectable _targetUrl;
+
 		private int _statusCode;
 
 		private bool _needCycleRetry;
@@ -160,9 +162,23 @@ namespace Java2Dotnet.Spider.Core
 			return _url;
 		}
 
+		/// <summary>
+		/// Get url of current page
+		/// </summary>
+		/// <returns></returns>
+		public ISelectable GetTargetUrl()
+		{
+			return _targetUrl;
+		}
+
 		public void SetUrl(ISelectable url)
 		{
 			_url = url;
+		}
+
+		public void SetTargetUrl(ISelectable url)
+		{
+			_targetUrl = url;
 		}
 
 		public string TargetUrl { get; set; }

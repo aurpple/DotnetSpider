@@ -67,6 +67,7 @@
     <Compile Include="DataCrawlerExceptoin.cs" />
     <Compile Include="Page.cs" />
     <Compile Include="Downloader\BaseDownloader.cs" />
+    <Compile Include="Downloader\DownloadVerifyDelegate.cs" />
     <Compile Include="Pipeline\CachedPipeline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DefaultTask.cs" />

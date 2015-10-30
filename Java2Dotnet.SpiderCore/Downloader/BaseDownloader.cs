@@ -5,6 +5,8 @@ namespace Java2Dotnet.Spider.Core.Downloader
 {
 	public class BaseDownloader : IDownloader, IDisposable
 	{
+		public DownloadVerify DownloadVerifyEvent;
+
 		protected static readonly ILog Logger = LogManager.GetLogger(typeof(BaseDownloader));
 		protected int ThreadNum;
 

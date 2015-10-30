@@ -57,6 +57,16 @@ namespace Java2Dotnet.Spider.Core.Downloader
 				{
 					Page page = HandleResponse(request, charset, response, statusCode);
 
+					//customer verify
+					if (DownloadVerifyEvent != null)
+					{
+						string msg = "";
+						if (!DownloadVerifyEvent(page, ref msg))
+						{
+							throw new SpiderExceptoin(msg);
+						}
+					}
+
 					// 结束后要置空, 这个值存到Redis会导置无限循环跑单个任务
 					request.PutExtra(Request.CycleTriedTimes, null);
 

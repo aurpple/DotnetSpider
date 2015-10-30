@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -12,25 +11,19 @@ using OpenQA.Selenium;
 
 namespace Java2Dotnet.Spider.WebDriver
 {
-	public enum Browser
-	{
-		Firefox,
-		Phantomjs,
-		Chrome
-	}
-
 	public class WebDriverDownloader : BaseDownloader
 	{
 		private volatile WebDriverPool _webDriverPool;
 		private readonly int _webDriverWaitTime;
 		private readonly Browser _browser;
-
+		private readonly Option _option;
 		public bool LoadImage { get; set; } = true;
 
 		public Func<IWebDriver, bool> LoginFunc;
 
-		public WebDriverDownloader(Browser browser = Browser.Phantomjs, int webDriverWaitTime = 200)
+		public WebDriverDownloader(Browser browser = Browser.Phantomjs, int webDriverWaitTime = 200, Option option = null)
 		{
+			_option = option ?? new Option();
 			_webDriverWaitTime = webDriverWaitTime;
 			_browser = browser;
 
@@ -38,7 +31,7 @@ namespace Java2Dotnet.Spider.WebDriver
 			{
 				while (true)
 				{
-					Process[] faultProcesses = Process.GetProcessesByName("WerFault.exe");
+					Process[] faultProcesses = Process.GetProcessesByName("WerFault");
 					foreach (var process in faultProcesses)
 					{
 						try
@@ -53,6 +46,7 @@ namespace Java2Dotnet.Spider.WebDriver
 
 					Thread.Sleep(500);
 				}
+				// ReSharper disable once FunctionNeverReturns
 			});
 		}
 
@@ -60,22 +54,22 @@ namespace Java2Dotnet.Spider.WebDriver
 		{
 			CheckInit();
 
-			WebDriverItem webDriver = null;
+			WebDriverItem driverService = null;
 
 			try
 			{
-				webDriver = _webDriverPool.Get();
-				Site site = task.Site;				
-				if (!webDriver.IsLogined && LoginFunc != null)
+				driverService = _webDriverPool.Get();
+				Site site = task.Site;
+				if (!driverService.IsLogined && LoginFunc != null)
 				{
-					webDriver.IsLogined = LoginFunc.Invoke(webDriver.WebDriver);
-					if (!webDriver.IsLogined)
+					driverService.IsLogined = LoginFunc.Invoke(driverService.WebDriver);
+					if (!driverService.IsLogined)
 					{
 						throw new SpiderExceptoin("Login failed. Please check your login codes.");
 					}
 				}
 
-				IOptions manage = webDriver.WebDriver.Manage();
+				IOptions manage = driverService.WebDriver.Manage();
 				if (site.GetCookies() != null)
 				{
 					foreach (KeyValuePair<String, String> cookieEntry in site.GetCookies())
@@ -90,31 +84,28 @@ namespace Java2Dotnet.Spider.WebDriver
 				//中文乱码URL
 				Uri uri = new Uri(request.Url);
 				string query = uri.Query;
-				string realUrl = uri.Scheme + "://" + uri.DnsSafeHost + uri.AbsolutePath +
-								 (string.IsNullOrEmpty(query)
-									 ? ""
-									 : ("?" + HttpUtility.UrlPathEncode(uri.Query.Substring(1, uri.Query.Length - 1))));
+				string realUrl = uri.Scheme + "://" + uri.DnsSafeHost + uri.AbsolutePath + (string.IsNullOrEmpty(query) ? ""
+					: ("?" + HttpUtility.UrlPathEncode(uri.Query.Substring(1, uri.Query.Length - 1))));
 
-				webDriver.WebDriver.Navigate().GoToUrl(realUrl);
-
-				string resultUrl = webDriver.WebDriver.Url;
-				if (resultUrl.Contains("error") || resultUrl.Contains("login") || resultUrl.Contains("//www.tmall.com") ||
-					resultUrl.Contains("//alisec.tmall.com"))
-				{
-					Logger.Error("Url error: " + realUrl);
-					_webDriverPool.Close(webDriver);
-					// throw exception without return this webdriver
-					throw new SpiderExceptoin("Browser request too much.");
-				}
+				driverService.WebDriver.Navigate().GoToUrl(realUrl);
 
 				Thread.Sleep(_webDriverWaitTime);
 
-				//IWebElement webElement = webDriver.FindElement(By.XPath("/html"));
-				//String content = webElement.GetAttribute("outerHTML");
-
 				Page page = new Page(request);
-				page.SetRawText(webDriver.WebDriver.PageSource);
+				page.SetRawText(driverService.WebDriver.PageSource);
 				page.SetUrl(new PlainText(request.Url));
+				page.SetTargetUrl(new PlainText(driverService.WebDriver.Url));
+
+				//customer verify
+				if (DownloadVerifyEvent != null)
+				{
+					string msg = "";
+					if (!DownloadVerifyEvent(page, ref msg))
+					{
+						_webDriverPool.Close(driverService);
+						throw new SpiderExceptoin(msg);
+					}
+				}
 
 				// 结束后要置空, 这个值存到Redis会导置无限循环跑单个任务
 				request.PutExtra(Request.CycleTriedTimes, null);
@@ -123,7 +114,7 @@ namespace Java2Dotnet.Spider.WebDriver
 			}
 			finally
 			{
-				_webDriverPool.ReturnToPool(webDriver);
+				_webDriverPool.ReturnToPool(driverService);
 			}
 		}
 
@@ -138,7 +129,7 @@ namespace Java2Dotnet.Spider.WebDriver
 			{
 				lock (this)
 				{
-					_webDriverPool = new WebDriverPool(_browser, ThreadNum, LoadImage);
+					_webDriverPool = new WebDriverPool(_browser, ThreadNum, _option);
 				}
 			}
 		}

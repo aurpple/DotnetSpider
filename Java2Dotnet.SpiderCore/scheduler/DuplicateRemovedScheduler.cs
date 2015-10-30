@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Java2Dotnet.Spider.Core.Scheduler.Component;
 using log4net;
 
@@ -30,6 +31,7 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 			return null;
 		}
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		protected virtual void PushWhenNoDuplicate(Request request, ITask task)
 		{
 		}
