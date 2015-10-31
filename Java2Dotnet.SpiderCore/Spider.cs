@@ -785,7 +785,7 @@ namespace Java2Dotnet.Spider.Core
 
 				foreach (var entry in collection)
 				{
-					 result.Add(entry);
+					result.Add(entry);
 				}
 			}
 
