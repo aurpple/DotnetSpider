@@ -27,7 +27,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			}
 		}
 
-		public ICollection GetCollected()
+		public Dictionary<Type, List<dynamic>> GetCollected()
 		{
 			return _collector;
 		}

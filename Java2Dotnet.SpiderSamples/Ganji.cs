@@ -18,7 +18,7 @@ namespace Java2Dotnet.Spider.Samples
 	[ExtractBy(Value = "//*[@id=\"list-job-id\"]/div[9]/dl", Multi = true)]
 	[Scheme("ganji")]
 	[StoredAs("post")]
-	public class Ganji : BaseEntity
+	public class Ganji : SpiderEntity
 	{
 		public static void RunTask()
 		{
@@ -27,7 +27,7 @@ namespace Java2Dotnet.Spider.Samples
 				new PageModelToDbPipeline(), typeof(Ganji));
 			ooSpider.SetEmptySleepTime(15000);
 			ooSpider.SetThreadNum(1);
-			ooSpider.ModelPipeline.CachedSize = 1;
+			ooSpider.ModelPipeline.CachedSize = 2;
 			ooSpider.SetScheduler(new QueueScheduler());
 			ooSpider.AddUrl("http://sh.ganji.com/zpdianhuaxiaoshou/o1/");
 			ooSpider.Run();

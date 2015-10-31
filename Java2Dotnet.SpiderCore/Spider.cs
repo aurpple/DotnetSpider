@@ -56,7 +56,7 @@ namespace Java2Dotnet.Spider.Core
 		protected string RootDirectory;
 
 		protected IDownloader Downloader { get; set; }
-		protected IList<IPipeline> Pipelines { get; set; } = new List<IPipeline>();
+		protected List<IPipeline> Pipelines { get; set; } = new List<IPipeline>();
 		protected IPageProcessor PageProcessor { get; set; }
 		protected HashSet<Request> StartRequests { get; set; }
 		protected IScheduler Scheduler { get; set; } = new QueueScheduler();
@@ -761,7 +761,8 @@ namespace Java2Dotnet.Spider.Core
 		//	}
 		//}
 
-		public IList<T> GetAll<T>(params string[] urls)
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public List<dynamic> GetAll(Type[] types, params string[] urls)
 		{
 			DestroyWhenExit = false;
 			SpawnUrl = false;
@@ -770,23 +771,25 @@ namespace Java2Dotnet.Spider.Core
 			{
 				AddRequest(request);
 			}
-			ICollectorPipeline collectorPipeline = GetCollectorPipeline<T>();
+			List<ICollectorPipeline> collectorPipelineList = GetCollectorPipeline(types);
 			Pipelines.Clear();
-			Pipelines.Add(collectorPipeline);
+			Pipelines.AddRange(collectorPipelineList);
 			Run();
 			SpawnUrl = true;
 			DestroyWhenExit = true;
 
-			ICollection collection = collectorPipeline.GetCollected();
+			List<dynamic> result = new List<dynamic>();
+			foreach (var collectorPipeline in collectorPipelineList)
+			{
+				ICollection collection = collectorPipeline.GetCollected();
 
-			try
-			{
-				return (from object current in collection select (T)current).ToList();
+				foreach (var entry in collection)
+				{
+					 result.Add(entry);
+				}
 			}
-			catch (Exception)
-			{
-				throw new SpiderExceptoin($"Your pipeline didn't extract data to model: {typeof(T).FullName}");
-			}
+
+			return result;
 		}
 
 		[MethodImpl(MethodImplOptions.Synchronized)]
@@ -801,9 +804,9 @@ namespace Java2Dotnet.Spider.Core
 			GC.Collect();
 		}
 
-		protected virtual ICollectorPipeline GetCollectorPipeline<T>()
+		protected virtual List<ICollectorPipeline> GetCollectorPipeline(params Type[] types)
 		{
-			return new ResultItemsCollectorPipeline();
+			return new List<ICollectorPipeline>() { new ResultItemsCollectorPipeline() };
 		}
 
 		//public T Get<T>(string url)

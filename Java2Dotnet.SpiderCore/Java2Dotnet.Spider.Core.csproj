@@ -74,6 +74,7 @@
     <Compile Include="Proxy\HttpHost.cs" />
     <Compile Include="Proxy\Proxy.cs" />
     <Compile Include="Proxy\ProxyPool.cs" />
+    <Compile Include="IPeservable.cs" />
     <Compile Include="Selector\AndSelector.cs" />
     <Compile Include="Selector\BaseElementSelector.cs" />
     <Compile Include="Selector\CssSelector.cs" />

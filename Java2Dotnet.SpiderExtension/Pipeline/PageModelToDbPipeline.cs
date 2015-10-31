@@ -70,7 +70,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 					IList list = pair.Value;
 					if (list.Count > 0)
 					{
-						type = type.GetGenericTypeDefinition();
+						type = list[0].GetType();
 
 						if (_cache.ContainsKey(type))
 						{

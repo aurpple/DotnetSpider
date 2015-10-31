@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Pipeline;
 
@@ -33,16 +35,18 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 				{
 					dynamic data = resultItems.Get(pipelineEntry.Key.FullName);
 					Type type = data.GetType();
-					if (data.GetType().IsGenericType)
+
+					if (typeof(IEnumerable).IsAssignableFrom(type))
 					{
-						type = type.GetGenericTypeDefinition();
 						if (resultDictionary.ContainsKey(type))
 						{
 							resultDictionary[type].AddRange(data);
 						}
 						else
 						{
-							resultDictionary.Add(type, new List<dynamic> (data));
+							List<dynamic> list = new List<dynamic>();
+							list.AddRange(data);
+							resultDictionary.Add(type, list);
 						}
 					}
 					else

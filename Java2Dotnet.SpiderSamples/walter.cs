@@ -15,7 +15,7 @@ namespace Java2Dotnet.Spider.Samples
 	[ExtractBy(Value = "//*[@id=\"tab_top50\"]/div[1]/ul/li", Multi = true, Count = 15)]
 	[Scheme("aiqiyi")]
 	[StoredAs("movies")]
-	public class walter : BaseEntity
+	public class walter : SpiderEntity
 	{
 		public static void RunTask()
 		{

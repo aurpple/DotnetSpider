@@ -77,9 +77,9 @@ namespace Java2Dotnet.Spider.Extension.Model
 
 		public ModelPipeline ModelPipeline => _modelPipeline;
 
-		protected override ICollectorPipeline GetCollectorPipeline<T>()
+		protected override List<ICollectorPipeline> GetCollectorPipeline(params Type[] types)
 		{
-			return new PageModelCollectorPipeline(_pageModelTypes.First(t => t.FullName == typeof(T).FullName));
+			return types.Select(type => new PageModelCollectorPipeline(_pageModelTypes.First(t => t.FullName == type.FullName))).Cast<ICollectorPipeline>().ToList();
 		}
 
 		public static OoSpider Create(Site site, params Type[] pageModels)
