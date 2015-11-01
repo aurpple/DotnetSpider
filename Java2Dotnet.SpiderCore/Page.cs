@@ -19,6 +19,7 @@ namespace Java2Dotnet.Spider.Core
 	/// </summary>
 	public class Page
 	{
+		public const string Images = "580c9065-0f44-47e9-94ea-b172d5a730c0";
 		private readonly Request _request;
 
 		private readonly ResultItems _resultItems = new ResultItems();

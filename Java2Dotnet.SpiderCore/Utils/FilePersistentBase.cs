@@ -29,7 +29,12 @@ namespace Java2Dotnet.Spider.Core.Utils
 			return new FileInfo(fullName);
 		}
 
-		private static void CheckAndMakeParentDirecotry(string fullName)
+		public static DirectoryInfo PrepareDirectory(string fullName)
+		{
+			return new DirectoryInfo(CheckAndMakeParentDirecotry(fullName));
+		}
+
+		private static string CheckAndMakeParentDirecotry(string fullName)
 		{
 			string path = Path.GetDirectoryName(fullName);
 
@@ -41,6 +46,7 @@ namespace Java2Dotnet.Spider.Core.Utils
 					directory.Create();
 				}
 			}
+			return path;
 		}
 	}
 }

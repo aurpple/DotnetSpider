@@ -59,7 +59,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 		/// <param name="pageModelPipeline"></param>
 		/// <param name="modelTypes"></param>
 		public OoSpider(string identify, Site site, IPageModelPipeline pageModelPipeline, params Type[] modelTypes)
-			: this(identify, ModelPageProcessor.Create(site, modelTypes))
+			: this(identify, ModelPageProcessor.Create(site,  modelTypes))
 		{
 			_modelPipeline = new ModelPipeline();
 

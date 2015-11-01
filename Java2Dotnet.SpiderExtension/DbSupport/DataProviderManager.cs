@@ -5,7 +5,7 @@ namespace Java2Dotnet.Spider.Extension.DbSupport
 {
 	public class DataProviderManager : IDataProviderManager
 	{
-		private string _dapperConnectString = "dotnetdb";
+		private string _dapperConnectString = "dotnetspider";
 		public DataSettings Settings { get; set; }
 
 		public DataProviderManager()

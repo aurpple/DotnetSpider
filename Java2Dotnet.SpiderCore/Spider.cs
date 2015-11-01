@@ -53,7 +53,7 @@ namespace Java2Dotnet.Spider.Core
 		[DllImport("user32.dll ", EntryPoint = "RemoveMenu")]
 		private extern static int RemoveMenu(IntPtr hMenu, int nPos, int flags);
 
-		protected string RootDirectory;
+		protected readonly string RootDirectory;
 
 		protected IDownloader Downloader { get; set; }
 		protected List<IPipeline> Pipelines { get; set; } = new List<IPipeline>();
@@ -62,7 +62,7 @@ namespace Java2Dotnet.Spider.Core
 		protected IScheduler Scheduler { get; set; } = new QueueScheduler();
 		public int ThreadNum { get; set; } = 1;
 		public int Deep { get; set; } = int.MaxValue;
-		protected static ILog Logger = LogManager.GetLogger(typeof(Spider));
+		protected static readonly ILog Logger = LogManager.GetLogger(typeof(Spider));
 
 		protected readonly static int StatInit = 0;
 		protected readonly static int StatRunning = 1;
@@ -119,8 +119,8 @@ namespace Java2Dotnet.Spider.Core
 			PageProcessor = pageProcessor;
 			_site = pageProcessor.Site;
 			StartRequests = pageProcessor.Site.GetStartRequests();
-			_identify = identify;
-			RootDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\data\\dotnetspider\\" + Encrypt.Md5Encrypt(Identify);
+			_identify = string.IsNullOrWhiteSpace(identify) ? Guid.NewGuid().ToString() : identify;
+			RootDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\data\\dotnetspider\\" + Identify;
 		}
 
 		/// <summary>
@@ -291,7 +291,16 @@ namespace Java2Dotnet.Spider.Core
 
 			if (!_registConsoleCtrlHandler)
 			{
-				Console.Title = Identify;
+				try
+				{
+					// 在非控制台程序下调用会出异常
+					Console.Title = Identify;
+				}
+				catch (Exception)
+				{
+					// ignored
+				}
+
 				Console.CancelKeyPress += Console_CancelKeyPress;
 				_registConsoleCtrlHandler = true;
 
@@ -457,9 +466,12 @@ namespace Java2Dotnet.Spider.Core
 
 		protected void OnError(Request request)
 		{
-			//写入文件中, 用户从最终的结果可以知道有多少个Request没有跑. 提供ReRun, Spider可以重新载入错误的Request重新跑过
-			FileInfo file = FilePersistentBase.PrepareFile(Path.Combine(RootDirectory, "ErrorRequests.txt"));
-			File.AppendAllText(file.FullName, JsonConvert.SerializeObject(request) + Environment.NewLine, Encoding.UTF8);
+			lock (this)
+			{
+				//写入文件中, 用户从最终的结果可以知道有多少个Request没有跑. 提供ReRun, Spider可以重新载入错误的Request重新跑过
+				FileInfo file = FilePersistentBase.PrepareFile(Path.Combine(RootDirectory, "ErrorRequests.txt"));
+				File.AppendAllText(file.FullName, JsonConvert.SerializeObject(request) + Environment.NewLine, Encoding.UTF8);
+			}
 
 			if (_spiderListeners != null && _spiderListeners.Count > 0)
 			{
@@ -762,7 +774,7 @@ namespace Java2Dotnet.Spider.Core
 		//}
 
 		[MethodImpl(MethodImplOptions.Synchronized)]
-		public List<dynamic> GetAll(Type[] types, params string[] urls)
+		public Dictionary<Type, List<dynamic>> GetAll(Type[] types, params string[] urls)
 		{
 			DestroyWhenExit = false;
 			SpawnUrl = false;
@@ -778,14 +790,23 @@ namespace Java2Dotnet.Spider.Core
 			SpawnUrl = true;
 			DestroyWhenExit = true;
 
-			List<dynamic> result = new List<dynamic>();
+			Dictionary<Type, List<dynamic>> result = new Dictionary<Type, List<dynamic>>();
 			foreach (var collectorPipeline in collectorPipelineList)
 			{
 				ICollection collection = collectorPipeline.GetCollected();
 
 				foreach (var entry in collection)
 				{
-					result.Add(entry);
+					var de = (KeyValuePair<Type, List<dynamic>>)entry;
+
+					if (result.ContainsKey(de.Key))
+					{
+						result[de.Key].AddRange(de.Value);
+					}
+					else
+					{
+						result.Add(de.Key, new List<dynamic>(de.Value));
+					}
 				}
 			}
 

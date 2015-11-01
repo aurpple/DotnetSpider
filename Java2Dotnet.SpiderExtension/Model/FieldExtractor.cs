@@ -22,5 +22,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 		public IObjectFormatter ObjectFormatter { get; set; }
 
 		public Stoper Stoper { get; set; }
+
+		public bool Download { get; set; }
 	}
 }

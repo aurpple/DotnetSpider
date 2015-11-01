@@ -115,6 +115,7 @@
     <Compile Include="Model\Attribute\ComboExtract.cs" />
     <Compile Include="Model\Attribute\ExtractBy.cs" />
     <Compile Include="Model\Attribute\HelpUrl.cs" />
+    <Compile Include="Model\Attribute\Download.cs" />
     <Compile Include="Model\Attribute\Stoper.cs" />
     <Compile Include="Model\Attribute\Table.cs" />
     <Compile Include="Model\BaseEntity.cs" />

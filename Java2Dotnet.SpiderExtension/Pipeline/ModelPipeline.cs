@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Pipeline;
 

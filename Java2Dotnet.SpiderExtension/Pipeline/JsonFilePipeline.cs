@@ -12,8 +12,6 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 	/// </summary>
 	public class JsonFilePipeline : FilePersistentBase, IPipeline
 	{
-		private static readonly log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(JsonFilePipeline));
-
 		/// <summary>
 		/// New JsonFilePageModelPipeline with default path "/data/webmagic/"
 		/// </summary>

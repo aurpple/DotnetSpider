@@ -8,7 +8,6 @@ using Java2Dotnet.Spider.Core.Utils;
 using Java2Dotnet.Spider.Extension.DbSupport;
 using Java2Dotnet.Spider.Extension.DbSupport.Dapper;
 using Java2Dotnet.Spider.Extension.DbSupport.Dapper.Attributes;
-using Java2Dotnet.Spider.Extension.Model.Formatter;
 
 namespace Java2Dotnet.Spider.Extension.Pipeline
 {
@@ -27,6 +26,8 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		public PageModelToDbPipeline(OperateType operateType = OperateType.Insert)
 		{
 			_operateType = operateType;
+
+			DbProviderUtil.Provider = new DataProviderManager().LoadDataProvider();
 		}
 
 		private readonly AutomicLong _totalCount = new AutomicLong(0);
@@ -54,7 +55,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 					{
 						if (type.GetCustomAttribute(typeof(StoredAs)) != null)
 						{
-							dataRepository = new DataRepository(DbProviderUtil.GetProvider, type);
+							dataRepository = new DataRepository(type);
 							dataRepository.CreateSheme();
 							dataRepository.CreateTable();
 							_cache.TryAdd(type, dataRepository);
@@ -80,7 +81,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 						{
 							if (type.GetCustomAttribute(typeof(StoredAs)) != null)
 							{
-								dataRepository = new DataRepository(DbProviderUtil.GetProvider, type);
+								dataRepository = new DataRepository(type);
 								dataRepository.CreateSheme();
 								dataRepository.CreateTable();
 								_cache.TryAdd(type, dataRepository);

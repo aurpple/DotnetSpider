@@ -4,7 +4,6 @@ using System.IO;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
 using Java2Dotnet.Spider.Core.Utils;
-using log4net;
 
 namespace Java2Dotnet.Spider.Core.Pipeline
 {
@@ -14,10 +13,8 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 	[Synchronization]
 	public sealed class FilePipeline : FilePersistentBase, IPipeline
 	{
-		private static readonly ILog Logger = LogManager.GetLogger(typeof(FilePipeline));
-
 		/// <summary>
-		/// create a FilePipeline with default path"/data/webmagic/"
+		/// create a FilePipeline with default path"/data/dotnetspider/"
 		/// </summary>
 		public FilePipeline()
 		{

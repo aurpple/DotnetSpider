@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Java2Dotnet.Spider.Core;
@@ -24,6 +26,8 @@ namespace Java2Dotnet.Spider.Extension.Model
 		private List<FieldExtractor> _fieldExtractors;
 		private Extractor _objectExtractor;
 		private readonly static log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(PageModelExtractor));
+		private static readonly WebClient WebClient = new WebClient();
+		private static readonly Regex UrlRegex = new Regex(@"((http|https|ftp):(\/\/|\\\\)((\w)+[.]){1，}(net|com|cn|org|cc|tv|[0-9]{1，3})(((\/[\~]*|\\[\~]*)(\w)+)|[.](\w)+)*(((([?](\w)+){1}[=]*))*((\w)+){1}([\&](\w)+[\=](\w)+)*)*)");
 
 		private PageModelExtractor(Type type)
 		{
@@ -38,17 +42,24 @@ namespace Java2Dotnet.Spider.Extension.Model
 			return pageModelExtractor;
 		}
 
-		private FieldExtractor GetAnnotationExtractBy(PropertyInfo field)
+		private FieldExtractor GetAttributeExtractBy(PropertyInfo field)
 		{
 			FieldExtractor fieldExtractor = null;
 			ExtractBy extractBy = (ExtractBy)field.GetCustomAttribute(typeof(ExtractBy));
 			if (extractBy != null)
 			{
 				ISelector selector = ExtractorUtils.GetSelector(extractBy);
-				// 改为由属性类型决定是否为List, Attribte可能设错, 而Property可能更可靠
+				// 改为由属性类型决定是否为List, Attribte可能会错, Property可能更可靠
 				fieldExtractor = new FieldExtractor(field, selector, extractBy.Source,
 					extractBy.NotNull, field.PropertyType.IsGenericType);
+
+				Download image = (Download)field.GetCustomAttribute(typeof(Download));
+				if (image != null)
+				{
+					fieldExtractor.Download = true;
+				}
 			}
+
 			return fieldExtractor;
 		}
 
@@ -58,14 +69,14 @@ namespace Java2Dotnet.Spider.Extension.Model
 			_fieldExtractors = new List<FieldExtractor>();
 			foreach (PropertyInfo field in _modelType.GetProperties())
 			{
-				FieldExtractor fieldExtractor = GetAnnotationExtractBy(field);
-				FieldExtractor fieldExtractorTmp = GetAnnotationExtractCombo(field);
+				FieldExtractor fieldExtractor = GetAttributeExtractBy(field);
+				FieldExtractor fieldExtractorTmp = GetAttributeExtractCombo(field);
 
 				if (fieldExtractor == null && fieldExtractorTmp != null)
 				{
 					fieldExtractor = fieldExtractorTmp;
 				}
-				fieldExtractorTmp = GetAnnotationExtractByUrl(field);
+				fieldExtractorTmp = GetAttributeExtractByUrl(field);
 				if (fieldExtractor == null && fieldExtractorTmp != null)
 				{
 					fieldExtractor = fieldExtractorTmp;
@@ -78,7 +89,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 		}
 
-		private FieldExtractor GetAnnotationExtractCombo(PropertyInfo field)
+		private FieldExtractor GetAttributeExtractCombo(PropertyInfo field)
 		{
 			FieldExtractor fieldExtractor = null;
 			ComboExtract comboExtract = field.GetCustomAttribute<ComboExtract>();
@@ -168,7 +179,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 		}
 
-		private FieldExtractor GetAnnotationExtractByUrl(PropertyInfo field)
+		private FieldExtractor GetAttributeExtractByUrl(PropertyInfo field)
 		{
 			FieldExtractor fieldExtractor = null;
 			ExtractByUrl extractByUrl = field.GetCustomAttribute<ExtractByUrl>();
@@ -285,7 +296,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 
 		private object ProcessSingle(Page page, string html, bool isRaw)
 		{
-			object o = Activator.CreateInstance(_modelType);
+			object instance = Activator.CreateInstance(_modelType);
 			foreach (FieldExtractor fieldExtractor in _fieldExtractors)
 			{
 				if (fieldExtractor.Multi)
@@ -370,20 +381,49 @@ namespace Java2Dotnet.Spider.Extension.Model
 							}
 						}
 
-						dynamic field = fieldExtractor.Field.GetValue(o) ?? Activator.CreateInstance(fieldExtractor.Field.PropertyType);
+						dynamic field = fieldExtractor.Field.GetValue(instance) ?? Activator.CreateInstance(fieldExtractor.Field.PropertyType);
 
 						Type[] genericType = fieldExtractor.Field.PropertyType.GetGenericArguments();
 						MethodInfo method = fieldExtractor.Field.PropertyType.GetMethod("Add", genericType);
+
+						if (fieldExtractor.Download)
+						{
+							List<string> urlList = new List<string>();
+							foreach (var url in converted)
+							{
+								// 不需要判断为空, 前面已经判断过了
+								if (UrlRegex.IsMatch(url))
+								{
+									urlList.Add(url);
+								}
+							}
+							page.PutField(Page.Images, urlList);
+						}
+
 						foreach (var v in converted)
 						{
 							method.Invoke(field, new object[] { v });
 						}
 
-						fieldExtractor.Field.SetValue(o, field);
+						fieldExtractor.Field.SetValue(instance, field);
 					}
 					else
 					{
-						fieldExtractor.Field.SetValue(o, value);
+						fieldExtractor.Field.SetValue(instance, value);
+
+						if (fieldExtractor.Download)
+						{
+							List<string> urlList = new List<string>();
+							foreach (var url in value)
+							{
+								// 不需要判断为空, 前面已经判断过了
+								if (UrlRegex.IsMatch(url))
+								{
+									urlList.Add(url);
+								}
+							}
+							page.PutField(Page.Images, urlList);
+						}
 					}
 				}
 				else
@@ -453,19 +493,28 @@ namespace Java2Dotnet.Spider.Extension.Model
 							page.MissTargetUrls = fieldExtractor.Stoper.NeedStop(converted);
 						}
 
-						fieldExtractor.Field.SetValue(o, converted);
+						fieldExtractor.Field.SetValue(instance, converted);
 					}
 					else
 					{
-						fieldExtractor.Field.SetValue(o, value);
+						fieldExtractor.Field.SetValue(instance, value);
+					}
+
+					if (fieldExtractor.Download)
+					{
+						// 不需要判断为空, 前面已经判断过了
+						if (UrlRegex.IsMatch(value))
+						{
+							page.PutField(Page.Images, value);
+						}
 					}
 				}
 			}
 
-			IAfterExtractor afterExtractor = o as IAfterExtractor;
+			IAfterExtractor afterExtractor = instance as IAfterExtractor;
 			afterExtractor?.AfterProcess(page);
 
-			return o;
+			return instance;
 		}
 
 		private dynamic Convert(string value, IObjectFormatter objectFormatter)

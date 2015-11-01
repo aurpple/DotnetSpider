@@ -16,7 +16,7 @@ namespace Java2Dotnet.Spider.Extension.Processor
 	{
 		private readonly IList<PageModelExtractor> _pageModelExtractorList = new List<PageModelExtractor>();
 
-		public static ModelPageProcessor Create(Site site, params Type[] types)
+		public static ModelPageProcessor Create(Site site,  params Type[] types)
 		{
 			ModelPageProcessor modelPageProcessor = new ModelPageProcessor(site);
 			foreach (Type type in types)

@@ -6,7 +6,7 @@ using Java2Dotnet.Spider.Core.Pipeline;
 
 namespace Java2Dotnet.Spider.Extension.Pipeline
 {
-	public sealed class PageModelCollectorPipeline : ICollectorPipeline
+	internal sealed class PageModelCollectorPipeline : ICollectorPipeline
 	{
 		private readonly CollectorPageModelPipeline _collectorPipeline = new CollectorPageModelPipeline();
 		private readonly Type _type;
@@ -24,12 +24,43 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		//[MethodImplAttribute(MethodImplOptions.Synchronized)]
 		public void Process(ResultItems resultItems, ITask task)
 		{
-			dynamic o = resultItems.Get(_type.FullName);
-			if (o != null)
+			if (resultItems == null)
 			{
-				//check
-				_collectorPipeline.Process(o, task);
+				return;
 			}
+
+			Dictionary<Type, List<dynamic>> resultDictionary = new Dictionary<Type, List<dynamic>>();
+
+
+			dynamic data = resultItems.Get(_type.FullName);
+			Type type1 = data.GetType();
+
+			if (typeof(IEnumerable).IsAssignableFrom(type1))
+			{
+				if (resultDictionary.ContainsKey(type1))
+				{
+					resultDictionary[type1].AddRange(data);
+				}
+				else
+				{
+					List<dynamic> list = new List<dynamic>();
+					list.AddRange(data);
+					resultDictionary.Add(type1, list);
+				}
+			}
+			else
+			{
+				if (resultDictionary.ContainsKey(type1))
+				{
+					resultDictionary[type1].Add(data);
+				}
+				else
+				{
+					resultDictionary.Add(type1, new List<dynamic> { data });
+				}
+			}
+
+			_collectorPipeline.Process(resultDictionary, task);
 		}
 	}
 }
