@@ -86,6 +86,8 @@ namespace Java2Dotnet.Spider.Core
 		private string _identify;
 		private readonly Site _site;
 		private Regex _subHtmlRegex;
+		private static readonly object ErroLogFileLocker = new object();
+		private static readonly Regex IdentifyRegex = new Regex(@"^[\d\w\s-]+$");
 
 		/// <summary>
 		/// Create a spider with pageProcessor.
@@ -119,7 +121,19 @@ namespace Java2Dotnet.Spider.Core
 			PageProcessor = pageProcessor;
 			_site = pageProcessor.Site;
 			StartRequests = pageProcessor.Site.GetStartRequests();
-			_identify = string.IsNullOrWhiteSpace(identify) ? Guid.NewGuid().ToString() : identify;
+			if (string.IsNullOrWhiteSpace(identify))
+			{
+				_identify = Guid.NewGuid().ToString();
+			}
+			else
+			{
+				if (!IdentifyRegex.IsMatch(identify))
+				{
+					throw new SpiderExceptoin("Task Identify only can contains A-Z a-z 0-9 _ -");
+				}
+				_identify = identify;
+			}
+
 			RootDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\data\\dotnetspider\\" + Identify;
 		}
 
@@ -340,30 +354,6 @@ namespace Java2Dotnet.Spider.Core
 
 			Logger.Info("Spider " + Identify + " Started!");
 
-			if (ShowConsoleProcessStatus)
-			{
-				Task.Factory.StartNew(() =>
-				{
-					while (true)
-					{
-						try
-						{
-							Console.ForegroundColor = ConsoleColor.Green;
-							Console.WriteLine(
-								$"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
-							Console.ResetColor();
-							Thread.Sleep(800);
-						}
-						catch
-						{
-							Thread.Sleep(800);
-							// ignored
-						}
-					}
-					// ReSharper disable once FunctionNeverReturns
-				});
-			}
-
 			bool firstTask = false;
 			while (Stat.Value == StatRunning)
 			{
@@ -395,6 +385,23 @@ namespace Java2Dotnet.Spider.Core
 
 					ThreadPool.Execute((obj, cts) =>
 					{
+						if (ShowConsoleProcessStatus)
+						{
+							try
+							{
+								Console.ForegroundColor = ConsoleColor.Green;
+								Console.WriteLine(
+									$"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
+								Console.ResetColor();
+								Thread.Sleep(800);
+							}
+							catch
+							{
+								Thread.Sleep(800);
+								// ignored
+							}
+						}
+
 						var request1 = obj as Request;
 						if (request1 != null)
 						{
@@ -466,7 +473,7 @@ namespace Java2Dotnet.Spider.Core
 
 		protected void OnError(Request request)
 		{
-			lock (this)
+			lock (ErroLogFileLocker)
 			{
 				//写入文件中, 用户从最终的结果可以知道有多少个Request没有跑. 提供ReRun, Spider可以重新载入错误的Request重新跑过
 				FileInfo file = FilePersistentBase.PrepareFile(Path.Combine(RootDirectory, "ErrorRequests.txt"));
@@ -863,7 +870,7 @@ namespace Java2Dotnet.Spider.Core
 			//	return;
 			//}
 
-			Thread.Sleep(50);
+			Thread.Sleep(5);
 			++_waitCount;
 		}
 

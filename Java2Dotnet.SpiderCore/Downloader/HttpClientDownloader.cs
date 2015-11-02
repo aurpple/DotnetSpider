@@ -29,19 +29,10 @@ namespace Java2Dotnet.Spider.Core.Downloader
 
 			Site site = task.Site;
 
-			ICollection<int> acceptStatCode;
-			Encoding charset = null;
-			IDictionary headers = null;
-			if (site != null)
-			{
-				acceptStatCode = site.AcceptStatCode;
-				charset = site.Encoding;
-				headers = site.GetHeaders();
-			}
-			else
-			{
-				acceptStatCode = new HashSet<int> { 200 };
-			}
+			ICollection<int> acceptStatCode = site.AcceptStatCode;
+			var charset = site.Encoding;
+			var headers = site.GetHeaders();
+
 			//Logger.InfoFormat("Downloading page {0}", request.Url);
 
 			int statusCode = 0;
@@ -153,14 +144,6 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			httpWebRequest.ContinueTimeout = site.Timeout;
 			httpWebRequest.ReadWriteTimeout = site.Timeout;
 			httpWebRequest.AllowAutoRedirect = true;
-
-			if (headers != null)
-			{
-				foreach (DictionaryEntry entry in headers)
-				{
-					httpWebRequest.Headers.Add(entry.Key.ToString(), entry.Value.ToString());
-				}
-			}
 
 			if (site.GetHttpProxyPool().Enable)
 			{

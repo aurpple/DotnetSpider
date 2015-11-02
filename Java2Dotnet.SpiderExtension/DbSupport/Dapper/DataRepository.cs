@@ -21,6 +21,11 @@ namespace Java2Dotnet.Spider.Extension.DbSupport.Dapper
 		public DataRepository(Type type)
 		{
 			SqlGenerator = new MySqlGenerator(type);
+
+			if (DbProviderUtil.Provider == null)
+			{
+				DbProviderUtil.Provider = new DataProviderManager().LoadDataProvider();
+			}
 			GetConnection = DbProviderUtil.GetProvider;
 		}
 

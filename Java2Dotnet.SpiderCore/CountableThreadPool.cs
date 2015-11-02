@@ -80,7 +80,7 @@ namespace Java2Dotnet.Spider.Core
 			// List中保留比最大线程数多5个
 			while (GetAliveAndWaitingThreadCount() > _maxTaskCount)
 			{
-				Thread.Sleep(50);
+				Thread.Sleep(5);
 			}
 
 			var task = _factory.StartNew(o =>

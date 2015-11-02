@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using log4net;
 
@@ -14,20 +15,25 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 
 		public int CachedSize { get; set; } = 1;
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
 		public void Process(ResultItems resultItems, ITask task)
 		{
 			_cached.Add(resultItems);
 
 			if (_cached.Count >= CachedSize)
 			{
+				ResultItems[] result;
+				lock (this)
+				{
+					result = new ResultItems[_cached.Count];
+					_cached.CopyTo(result);
+					_cached.Clear();
+				}
+
 				// 做成异步
-				Process(_cached, task);
-				_cached.Clear();
+				Process(result.ToList(), task);
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
 		public void Flush(ITask task)
 		{
 			if (_cached.Count > 0)

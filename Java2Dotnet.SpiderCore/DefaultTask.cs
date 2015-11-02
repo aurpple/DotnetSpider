@@ -7,7 +7,7 @@ namespace Java2Dotnet.Spider.Core
 	/// </summary>
 	public class DefaultTask : ITask
 	{
-		private static  readonly Regex IdentifyRegex=new Regex(@"[0-9A-Za-z_-\s]+");
+		private static  readonly Regex IdentifyRegex=new Regex(@"^[0-9A-Za-z_-]+$");
 		public DefaultTask(string uuid, Site site)
 		{
 			if (!IdentifyRegex.IsMatch(uuid))

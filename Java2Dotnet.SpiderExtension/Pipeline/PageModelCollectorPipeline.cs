@@ -31,32 +31,30 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 
 			Dictionary<Type, List<dynamic>> resultDictionary = new Dictionary<Type, List<dynamic>>();
 
-
 			dynamic data = resultItems.Get(_type.FullName);
-			Type type1 = data.GetType();
 
-			if (typeof(IEnumerable).IsAssignableFrom(type1))
+			if (typeof(IEnumerable).IsAssignableFrom(_type))
 			{
-				if (resultDictionary.ContainsKey(type1))
+				if (resultDictionary.ContainsKey(_type))
 				{
-					resultDictionary[type1].AddRange(data);
+					resultDictionary[_type].AddRange(data);
 				}
 				else
 				{
 					List<dynamic> list = new List<dynamic>();
 					list.AddRange(data);
-					resultDictionary.Add(type1, list);
+					resultDictionary.Add(_type, list);
 				}
 			}
 			else
 			{
-				if (resultDictionary.ContainsKey(type1))
+				if (resultDictionary.ContainsKey(_type))
 				{
-					resultDictionary[type1].Add(data);
+					resultDictionary[_type].Add(data);
 				}
 				else
 				{
-					resultDictionary.Add(type1, new List<dynamic> { data });
+					resultDictionary.Add(_type, new List<dynamic> { data });
 				}
 			}
 

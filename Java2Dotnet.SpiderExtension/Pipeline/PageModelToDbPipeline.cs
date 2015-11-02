@@ -26,8 +26,6 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 		public PageModelToDbPipeline(OperateType operateType = OperateType.Insert)
 		{
 			_operateType = operateType;
-
-			DbProviderUtil.Provider = new DataProviderManager().LoadDataProvider();
 		}
 
 		private readonly AutomicLong _totalCount = new AutomicLong(0);
