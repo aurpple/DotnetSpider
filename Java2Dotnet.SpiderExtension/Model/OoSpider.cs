@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Pipeline;
-using Java2Dotnet.Spider.Core.Processor;
 using Java2Dotnet.Spider.Extension.Pipeline;
 using Java2Dotnet.Spider.Extension.Processor;
 
@@ -38,17 +37,12 @@ namespace Java2Dotnet.Spider.Extension.Model
 	{
 		private readonly ModelPageProcessor _modelPageProcessor;
 		private readonly ModelPipeline _modelPipeline;
-		private readonly IList<Type> _pageModelTypes = new List<Type>();
+		//private readonly IList<Type> _pageModelTypes = new List<Type>();
 
-		protected OoSpider(string identify, ModelPageProcessor modelPageProcessor)
+		private OoSpider(string identify, ModelPageProcessor modelPageProcessor)
 			: base(identify, modelPageProcessor)
 		{
 			_modelPageProcessor = modelPageProcessor;
-		}
-
-		public OoSpider(string identify, IPageProcessor pageProcessor)
-			: base(identify, pageProcessor)
-		{
 		}
 
 		/// <summary>
@@ -58,8 +52,8 @@ namespace Java2Dotnet.Spider.Extension.Model
 		/// <param name="site"></param>
 		/// <param name="pageModelPipeline"></param>
 		/// <param name="modelTypes"></param>
-		public OoSpider(string identify, Site site, IPageModelPipeline pageModelPipeline, params Type[] modelTypes)
-			: this(identify, ModelPageProcessor.Create(site,  modelTypes))
+		private OoSpider(string identify, Site site, IPageModelPipeline[] pageModelPipeline, params Type[] modelTypes)
+			: this(identify, ModelPageProcessor.Create(site, modelTypes))
 		{
 			_modelPipeline = new ModelPipeline();
 
@@ -69,9 +63,12 @@ namespace Java2Dotnet.Spider.Extension.Model
 			{
 				if (pageModelPipeline != null)
 				{
-					_modelPipeline.Put(modelType, pageModelPipeline);
+					foreach (var modelPipeline in pageModelPipeline)
+					{
+						_modelPipeline.Put(modelType, modelPipeline);
+					}
 				}
-				_pageModelTypes.Add(modelType);
+				//_pageModelTypes.Add(modelType);
 			}
 		}
 
@@ -79,7 +76,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 
 		protected override List<ICollectorPipeline> GetCollectorPipeline(params Type[] types)
 		{
-			return types.Select(type => new PageModelCollectorPipeline(_pageModelTypes.First(t => t.FullName == type.FullName))).Cast<ICollectorPipeline>().ToList();
+			return types.Select(type => new PageModelCollectorPipeline(type)).Cast<ICollectorPipeline>().ToList();
 		}
 
 		public static OoSpider Create(Site site, params Type[] pageModels)
@@ -87,17 +84,22 @@ namespace Java2Dotnet.Spider.Extension.Model
 			return new OoSpider(null, site, null, pageModels);
 		}
 
+		public static OoSpider Create(Site site, IPageModelPipeline pageModelPipeline, params Type[] pageModels)
+		{
+			return new OoSpider(null, site, new[] { pageModelPipeline }, pageModels);
+		}
+
 		public static OoSpider Create(string identify, Site site, params Type[] pageModels)
 		{
 			return new OoSpider(identify, site, null, pageModels);
 		}
 
-		public static OoSpider Create(Site site, IPageModelPipeline pageModelPipeline, params Type[] pageModels)
+		public static OoSpider Create(string identify, Site site, IPageModelPipeline pageModelPipeline, params Type[] pageModels)
 		{
-			return new OoSpider(null, site, pageModelPipeline, pageModels);
+			return new OoSpider(identify, site, new[] { pageModelPipeline }, pageModels);
 		}
 
-		public static OoSpider Create(string identify, Site site, IPageModelPipeline pageModelPipeline, params Type[] pageModels)
+		public static OoSpider Create(string identify, Site site, IPageModelPipeline[] pageModelPipeline, params Type[] pageModels)
 		{
 			return new OoSpider(identify, site, pageModelPipeline, pageModels);
 		}

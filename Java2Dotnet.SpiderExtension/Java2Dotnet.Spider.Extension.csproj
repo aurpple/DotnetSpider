@@ -138,6 +138,7 @@
     <Compile Include="Monitor\ISpiderStatus.cs" />
     <Compile Include="MultiPageModel.cs" />
     <Compile Include="Pipeline\CollectorPageModelPipeline.cs" />
+    <Compile Include="Pipeline\ImagePipeline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scheduler\ISchedulerManager.cs" />
     <Compile Include="Scheduler\RedisSchedulerManager.cs" />

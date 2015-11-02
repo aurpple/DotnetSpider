@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -52,12 +51,6 @@ namespace Java2Dotnet.Spider.Extension.Model
 				// 改为由属性类型决定是否为List, Attribte可能会错, Property可能更可靠
 				fieldExtractor = new FieldExtractor(field, selector, extractBy.Source,
 					extractBy.NotNull, field.PropertyType.IsGenericType);
-
-				Download image = (Download)field.GetCustomAttribute(typeof(Download));
-				if (image != null)
-				{
-					fieldExtractor.Download = true;
-				}
 			}
 
 			return fieldExtractor;
