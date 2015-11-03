@@ -17,7 +17,6 @@ namespace Java2Dotnet.Spider.WebDriver
 		private readonly int _webDriverWaitTime;
 		private readonly Browser _browser;
 		private readonly Option _option;
-		public bool LoadImage { get; set; } = true;
 		private static bool _isLogined;
 
 		public Func<IWebDriver, bool> LoginFunc;
@@ -70,13 +69,6 @@ namespace Java2Dotnet.Spider.WebDriver
 						if (!_isLogined)
 						{
 							throw new SpiderExceptoin("Login failed. Please check your login codes.");
-						}
-						else
-						{
-							foreach (var cookie in driverService.WebDriver.Manage().Cookies.AllCookies)
-							{
-								site.AddCookie(cookie.Name, cookie.Value);
-							}
 						}
 					}
 

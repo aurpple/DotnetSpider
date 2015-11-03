@@ -68,7 +68,7 @@ namespace Java2Dotnet.Spider.Core
 		protected readonly static int StatRunning = 1;
 		protected readonly static int StatStopped = 2;
 		protected static readonly int StatFinished = 3;
-		protected static readonly int WaitInterval = 25;
+		protected static readonly int WaitInterval = 50;
 
 		protected readonly AutomicLong Stat = new AutomicLong(StatInit);
 

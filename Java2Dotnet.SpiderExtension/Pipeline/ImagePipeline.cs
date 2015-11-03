@@ -94,7 +94,14 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 						//check 这里需要做一下URL检测, 如果不是URL则跳过下载, 可以考虑用正则或者限定图片,文件
 						string url = downloadPropertyInfo.GetMethod.Invoke(value, null).ToString();
 						string fileName = Path.GetFileName(url);
-						WebClient.DownloadFile(url, Path.Combine(direcotryPath, fileName));
+						try
+						{
+							WebClient.DownloadFile(url, Path.Combine(direcotryPath, fileName));
+						}
+						catch (Exception)
+						{
+							Logger.Warn($"Download image: {fileName} failed.");
+						}
 					}
 				}
 			}
