@@ -10,7 +10,6 @@ namespace Java2Dotnet.Spider.WebDriver
 		}
 
 		public IWebDriver WebDriver { get; }
-		public bool IsLogined { get; set; }
 
 		public override int GetHashCode()
 		{

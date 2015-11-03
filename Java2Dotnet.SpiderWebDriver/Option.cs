@@ -8,6 +8,6 @@
 
 		public bool AlwaysLoadNoFocusLibrary { get; set; } = true;
 
-		public bool LoadPlashPlayer { get; set; } = false;
+		public bool LoadPlashPlayer { get; set; } = true;
 	}
 }

@@ -80,7 +80,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <summary>
 		/// Get cookies
 		/// </summary>
-		public IDictionary GetCookies()
+		public Dictionary<string, string> GetCookies()
 		{
 			return _defaultCookies;
 		}

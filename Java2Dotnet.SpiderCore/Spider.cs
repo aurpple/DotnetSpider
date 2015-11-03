@@ -299,8 +299,10 @@ namespace Java2Dotnet.Spider.Core
 					ClearStartRequests();
 					Logger.InfoFormat("Push Request to Scheduler success.");
 				}
-
-				Logger.InfoFormat("Push Zero Request to Scheduler.");
+				else
+				{
+					Logger.InfoFormat("Push Zero Request to Scheduler.");
+				}
 			}
 
 			if (!_registConsoleCtrlHandler)

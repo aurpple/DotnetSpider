@@ -18,6 +18,7 @@ namespace Java2Dotnet.Spider.WebDriver
 		private readonly Browser _browser;
 		private readonly Option _option;
 		public bool LoadImage { get; set; } = true;
+		private static bool _isLogined;
 
 		public Func<IWebDriver, bool> LoginFunc;
 
@@ -59,23 +60,34 @@ namespace Java2Dotnet.Spider.WebDriver
 			try
 			{
 				driverService = _webDriverPool.Get();
-				Site site = task.Site;
-				if (!driverService.IsLogined && LoginFunc != null)
-				{
-					driverService.IsLogined = LoginFunc.Invoke(driverService.WebDriver);
-					if (!driverService.IsLogined)
-					{
-						throw new SpiderExceptoin("Login failed. Please check your login codes.");
-					}
-				}
 
-				IOptions manage = driverService.WebDriver.Manage();
-				if (site.GetCookies() != null)
+				lock (this)
 				{
-					foreach (KeyValuePair<String, String> cookieEntry in site.GetCookies())
+					Site site = task.Site;
+					if (!_isLogined && LoginFunc != null)
 					{
-						Cookie cookie = new Cookie(cookieEntry.Key, cookieEntry.Value);
-						manage.Cookies.AddCookie(cookie);
+						_isLogined = LoginFunc.Invoke(driverService.WebDriver);
+						if (!_isLogined)
+						{
+							throw new SpiderExceptoin("Login failed. Please check your login codes.");
+						}
+						else
+						{
+							foreach (var cookie in driverService.WebDriver.Manage().Cookies.AllCookies)
+							{
+								site.AddCookie(cookie.Name, cookie.Value);
+							}
+						}
+					}
+
+					IOptions manage = driverService.WebDriver.Manage();
+					if (site.GetCookies() != null)
+					{
+						foreach (KeyValuePair<String, String> cookieEntry in site.GetCookies())
+						{
+							Cookie cookie = new Cookie(cookieEntry.Key, cookieEntry.Value);
+							manage.Cookies.AddCookie(cookie);
+						}
 					}
 				}
 
