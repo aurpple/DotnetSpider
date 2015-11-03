@@ -65,7 +65,7 @@ namespace Java2Dotnet.Spider.WebDriver
 							e = new PhantomJSDriver();
 							break;
 						case Browser.Firefox:
-							FirefoxProfile profile = new FirefoxProfile(@"C:\Users\Lewis\AppData\Roaming\Mozilla\Firefox\Profiles\jwgw1vnl.dotnetspider", false);
+							FirefoxProfile profile = new FirefoxProfile();
 							if (!_option.AlwaysLoadNoFocusLibrary)
 							{
 								profile.AlwaysLoadNoFocusLibrary = true;

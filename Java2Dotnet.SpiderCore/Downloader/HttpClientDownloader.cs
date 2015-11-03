@@ -202,7 +202,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			content = HttpUtility.UrlDecode(HttpUtility.HtmlDecode(content), charset);
 			Page page = new Page(request);
 			page.SetRawText(content);
-			page.TargetUrl = response.ResponseUri.ToString();
+			page.SetTargetUrl(new PlainText(response.ResponseUri.ToString()));
 			page.SetUrl(new PlainText(request.Url));
 			page.SetStatusCode(statusCode);
 			return page;

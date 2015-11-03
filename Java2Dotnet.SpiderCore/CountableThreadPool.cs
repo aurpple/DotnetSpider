@@ -101,9 +101,9 @@ namespace Java2Dotnet.Spider.Core
 		{
 			_end = true;
 
-			lock (_tasks)
+			while (GetThreadAlive() > 0)
 			{
-				Task.WaitAll(_tasks.ToArray());
+				Thread.Sleep(1000);
 			}
 		}
 
