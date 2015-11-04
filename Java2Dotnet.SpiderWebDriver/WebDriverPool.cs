@@ -6,6 +6,7 @@ using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Utils;
 using log4net;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.PhantomJS;
 
@@ -18,6 +19,8 @@ namespace Java2Dotnet.Spider.WebDriver
 		private static int DEFAULT_CAPACITY = 5;
 
 		private readonly int _capacity;
+
+		private readonly Option _option;
 
 		private static int STAT_RUNNING = 1;
 
@@ -36,10 +39,11 @@ namespace Java2Dotnet.Spider.WebDriver
 		 * store webDrivers available
 		 */
 
-		public WebDriverPool(Browser browser, int capacity = 5)
+		public WebDriverPool(Browser browser, int capacity = 5, Option option = null)
 		{
 			_capacity = capacity;
 			_browser = browser;
+			_option = option ?? new Option();
 		}
 
 		public WebDriverPool() : this(Browser.Phantomjs, DEFAULT_CAPACITY)
@@ -61,7 +65,31 @@ namespace Java2Dotnet.Spider.WebDriver
 							e = new PhantomJSDriver();
 							break;
 						case Browser.Firefox:
-							e = new FirefoxDriver();
+							FirefoxProfile profile = new FirefoxProfile();
+							if (!_option.AlwaysLoadNoFocusLibrary)
+							{
+								profile.AlwaysLoadNoFocusLibrary = true;
+							}
+							//profile.SetPreference("permissions.default.stylesheet", 2);
+							if (!_option.LoadImage)
+							{
+								profile.SetPreference("permissions.default.image", 2);
+							}
+							if (!_option.LoadPlashPlayer)
+							{
+								profile.SetPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false");
+							}
+							e = new FirefoxDriver(profile);
+							break;
+						case Browser.Chrome:
+							ChromeDriverService cds = ChromeDriverService.CreateDefaultService();
+							cds.HideCommandPromptWindow = true;
+							ChromeOptions opt = new ChromeOptions();
+							if (!_option.LoadImage)
+							{
+								opt.AddUserProfilePreference("profile", new { default_content_settings = new { images = 2 } });
+							}
+							e = new ChromeDriver(cds, opt);
 							break;
 					}
 					_innerQueue.Enqueue(new WebDriverItem(e));

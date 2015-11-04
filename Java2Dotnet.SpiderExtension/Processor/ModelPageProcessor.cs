@@ -16,7 +16,7 @@ namespace Java2Dotnet.Spider.Extension.Processor
 	{
 		private readonly IList<PageModelExtractor> _pageModelExtractorList = new List<PageModelExtractor>();
 
-		public static ModelPageProcessor Create(Site site, params Type[] types)
+		public static ModelPageProcessor Create(Site site,  params Type[] types)
 		{
 			ModelPageProcessor modelPageProcessor = new ModelPageProcessor(site);
 			foreach (Type type in types)
@@ -52,7 +52,6 @@ namespace Java2Dotnet.Spider.Extension.Processor
 				PostProcessPageModel(process);
 				page.PutField(pageModelExtractor.GetModelType().FullName, process);
 
-				//页面中的某些值可以控制是否继续展开, 如淘宝按销量排序,如果发现结果中有为0的的结果,则停止
 				ExtractLinks(page, pageModelExtractor.GetTargetUrlRegionSelector(), pageModelExtractor.GetTargetUrlPatterns());
 			}
 			if (page.GetResultItems().GetAll().Count == 0)
@@ -83,7 +82,7 @@ namespace Java2Dotnet.Spider.Extension.Processor
 				{
 					if (targetUrlPattern.IsMatch(link))
 					{
-						page.AddTargetRequest(new Request(link, page.GetRequest().Extras));
+						page.AddTargetRequest(new Request(link, page.GetRequest().NextDeep(), page.GetRequest().Extras));
 					}
 				}
 			}

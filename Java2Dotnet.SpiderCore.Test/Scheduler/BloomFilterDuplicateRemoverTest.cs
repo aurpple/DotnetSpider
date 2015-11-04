@@ -29,14 +29,14 @@ namespace Java2Dotnet.Spider.Core.Test.Scheduler
 		public void TestRemove()
 		{
 			BloomFilterDuplicateRemover bloomFilterDuplicateRemover = new BloomFilterDuplicateRemover(10);
-			bool isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("a", null), null);
+			bool isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("a", 1, null), null);
 
 			Assert.IsFalse(isDuplicate);
-			isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("a", null), null);
+			isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("a", 1, null), null);
 			Assert.IsTrue(isDuplicate);
-			isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("b", null), null);
+			isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("b", 1, null), null);
 			Assert.IsFalse(isDuplicate);
-			isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("b", null), null);
+			isDuplicate = bloomFilterDuplicateRemover.IsDuplicate(new Request("b", 1, null), null);
 			Assert.IsTrue(isDuplicate);
 		}
 
@@ -57,7 +57,7 @@ namespace Java2Dotnet.Spider.Core.Test.Scheduler
 			long time = DateTime.UtcNow.CurrentTimeMillis();
 			for (int i = 0; i < times; i++)
 			{
-				duplicateRemover.IsDuplicate(new Request(i.ToString(), null), null);
+				duplicateRemover.IsDuplicate(new Request(i.ToString(), 1, null), null);
 			}
 			Console.WriteLine("Time used by bloomfilter:" + (DateTime.UtcNow.CurrentTimeMillis() - time));
 			Console.WriteLine("Memory used by bloomfilter:" + (GetProcessUsedMemory() - used));
@@ -68,7 +68,7 @@ namespace Java2Dotnet.Spider.Core.Test.Scheduler
 			time = DateTime.UtcNow.CurrentTimeMillis();
 			for (int i = 0; i < times; i++)
 			{
-				duplicateRemover.IsDuplicate(new Request(i.ToString(), null), null);
+				duplicateRemover.IsDuplicate(new Request(i.ToString(), 1, null), null);
 			}
 			Console.WriteLine("Time used by hashset:" + (DateTime.UtcNow.CurrentTimeMillis() - time));
 			Console.WriteLine("Memory used by hashset:" + (GetProcessUsedMemory() - used));
@@ -84,7 +84,7 @@ namespace Java2Dotnet.Spider.Core.Test.Scheduler
 			int missCheck = 0;
 			for (int i = 0; i < times; i++)
 			{
-				bool duplicate = duplicateRemover.IsDuplicate(new Request(i.ToString(), null), null);
+				bool duplicate = duplicateRemover.IsDuplicate(new Request(i.ToString(), 1, null), null);
 				if (duplicate)
 				{
 					wrong++;
@@ -93,7 +93,7 @@ namespace Java2Dotnet.Spider.Core.Test.Scheduler
 				{
 					right++;
 				}
-				duplicate = duplicateRemover.IsDuplicate(new Request(i.ToString(), null), null);
+				duplicate = duplicateRemover.IsDuplicate(new Request(i.ToString(), 1, null), null);
 				if (!duplicate)
 				{
 					missCheck++;

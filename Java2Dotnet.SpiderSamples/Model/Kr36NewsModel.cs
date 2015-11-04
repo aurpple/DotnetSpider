@@ -27,7 +27,7 @@ namespace Java2Dotnet.Spider.Samples.Model
 		{
 			Site site = new Site();
 			site.AddStartUrl("http://www.36kr.com/");
-			Core.Spider thread = OoSpider.Create(site, new CollectorPageModelToDbPipeline(), typeof(Kr36NewsModel)).SetThreadNum(20);
+			Core.Spider thread = OoSpider.Create(site, new PageModelToDbPipeline(), typeof(Kr36NewsModel)).SetThreadNum(20);
 			thread.Start();
 			SpiderMonitor spiderMonitor = SpiderMonitor.Instance;
 			spiderMonitor.Register(thread);

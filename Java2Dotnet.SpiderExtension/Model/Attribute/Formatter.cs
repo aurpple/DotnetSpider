@@ -1,13 +1,12 @@
 using System;
 using Java2Dotnet.Spider.Core;
-using Java2Dotnet.Spider.Extension.Model.Formatter;
 
 namespace Java2Dotnet.Spider.Extension.Model.Attribute
 {
 	/// <summary>
 	/// Define how the result string is convert to an object for field.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Property)]
 	public class Formatter : System.Attribute
 	{
 		private Type _formatterType;
@@ -23,16 +22,16 @@ namespace Java2Dotnet.Spider.Extension.Model.Attribute
 		/// <summary>
 		/// Set formatter params.
 		/// </summary>
-		public string[] Value { get; set; }
+		public string[] Value { get; }
 
 		/// <summary>
 		/// Specific the class of field of class of elements in collection for field. 
 		/// It is not necessary to be set because we can detect the class by class of field,
 		/// unless you use a collection as a field. 
 		/// </summary>
-		public Type SubType;
+		public Type SubType { get; }
 
-		public bool UseDefaultFormatter { get; set; }
+		public bool UseDefaultFormatter { get; }
 
 		/// <summary>
 		/// If there are more than one formatter for a class, just specify the implement.
@@ -40,7 +39,7 @@ namespace Java2Dotnet.Spider.Extension.Model.Attribute
 		public Type FormatterType
 		{
 			get { return _formatterType; }
-			set
+			private set
 			{
 				if (value == null)
 				{

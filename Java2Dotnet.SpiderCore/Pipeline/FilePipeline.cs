@@ -4,7 +4,6 @@ using System.IO;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
 using Java2Dotnet.Spider.Core.Utils;
-using log4net;
 
 namespace Java2Dotnet.Spider.Core.Pipeline
 {
@@ -12,16 +11,14 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 	/// Store results in files.
 	/// </summary>
 	[Synchronization]
-	public class FilePipeline : FilePersistentBase, IPipeline
+	public sealed class FilePipeline : FilePersistentBase, IPipeline
 	{
-		private readonly ILog _logger = LogManager.GetLogger(typeof(FilePipeline));
-
 		/// <summary>
-		/// create a FilePipeline with default path"/data/webmagic/"
+		/// create a FilePipeline with default path"/data/dotnetspider/"
 		/// </summary>
 		public FilePipeline()
 		{
-			SetPath("/data/datascrawler/");
+			SetPath(@"\data\dotnetspider\");
 		}
 
 		public FilePipeline(string path)
@@ -29,12 +26,12 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 			SetPath(path);
 		}
 
-		public virtual void Process(ResultItems resultItems, ITask task)
+		public void Process(ResultItems resultItems, ITask task)
 		{
 			string filePath = BasePath + PathSeperator + task.Identify + PathSeperator;
 			try
 			{
-				FileInfo file = GetFile(filePath + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
+				FileInfo file = PrepareFile(filePath + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
 				using (StreamWriter printWriter = new StreamWriter(file.OpenWrite(), Encoding.UTF8))
 				{
 					printWriter.WriteLine("url:\t" + resultItems.Request.Url);
@@ -60,7 +57,7 @@ namespace Java2Dotnet.Spider.Core.Pipeline
 			}
 			catch (Exception e)
 			{
-				_logger.Warn("Write file error.", e);
+				Logger.Warn("Write file error.", e);
 				throw;
 			}
 		}

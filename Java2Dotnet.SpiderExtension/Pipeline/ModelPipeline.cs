@@ -1,17 +1,16 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Pipeline;
-using Java2Dotnet.Spider.Extension.Model.Attribute;
 
 namespace Java2Dotnet.Spider.Extension.Pipeline
 {
 	/// <summary>
 	/// The extension to Pipeline for page model extractor.
 	/// </summary>
-	public class ModelPipeline : IPipeline
+	public class ModelPipeline : CachedPipeline
 	{
 		private readonly ConcurrentDictionary<Type, IPageModelPipeline> _pageModelPipelines = new ConcurrentDictionary<Type, IPageModelPipeline>();
 
@@ -21,28 +20,47 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			return this;
 		}
 
-		public void Process(ResultItems resultItems, ITask task)
+		protected override void Process(List<ResultItems> resultItemsList, ITask task)
 		{
-			foreach (var classPageModelPipelineEntry in _pageModelPipelines)
+			if (resultItemsList == null || resultItemsList.Count == 0)
 			{
-				object o = resultItems.Get(classPageModelPipelineEntry.Key.FullName);
-				if (o != null)
-				{
-					Attribute annotation = classPageModelPipelineEntry.Key.GetCustomAttribute(typeof(ExtractBy), false);
+				return;
+			}
 
-					if (annotation == null || !((ExtractBy)annotation).Multi)
+			foreach (var pipelineEntry in _pageModelPipelines)
+			{
+				Dictionary<Type, List<dynamic>> resultDictionary = new Dictionary<Type, List<dynamic>>();
+				foreach (var resultItems in resultItemsList)
+				{
+					dynamic data = resultItems.Get(pipelineEntry.Key.FullName);
+					Type type = data.GetType();
+
+					if (typeof(IEnumerable).IsAssignableFrom(type))
 					{
-						classPageModelPipelineEntry.Value.Process(o, task);
+						if (resultDictionary.ContainsKey(type))
+						{
+							resultDictionary[type].AddRange(data);
+						}
+						else
+						{
+							List<dynamic> list = new List<dynamic>();
+							list.AddRange(data);
+							resultDictionary.Add(type, list);
+						}
 					}
 					else
 					{
-						IList<object> list = (List<object>)o;
-						foreach (object o1 in list)
+						if (resultDictionary.ContainsKey(type))
 						{
-							classPageModelPipelineEntry.Value.Process(o1, task);
+							resultDictionary[type].Add(data);
+						}
+						else
+						{
+							resultDictionary.Add(type, new List<dynamic> { data });
 						}
 					}
 				}
+				pipelineEntry.Value.Process(resultDictionary, task);
 			}
 		}
 	}

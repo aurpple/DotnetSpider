@@ -13,7 +13,7 @@ namespace Java2Dotnet.Spider.Extension.Test
 			RedisScheduler redisScheduler = new RedisScheduler("localhost", "");
 
 			ITask task = new TestTask();
-			Request request = new Request("http://www.ibm.com/developerworks/cn/java/j-javadev2-22/", null);
+			Request request = new Request("http://www.ibm.com/developerworks/cn/java/j-javadev2-22/", 1, null);
 			request.PutExtra("1", "2");
 			redisScheduler.Push(request, task);
 			redisScheduler.Poll(task);

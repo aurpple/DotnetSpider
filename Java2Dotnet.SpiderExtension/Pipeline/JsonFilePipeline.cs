@@ -12,14 +12,12 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 	/// </summary>
 	public class JsonFilePipeline : FilePersistentBase, IPipeline
 	{
-		private readonly log4net.ILog _logger = log4net.LogManager.GetLogger(typeof(JsonFilePipeline));
-
 		/// <summary>
 		/// New JsonFilePageModelPipeline with default path "/data/webmagic/"
 		/// </summary>
 		public JsonFilePipeline()
 		{
-			SetPath("/data/donetspider");
+			SetPath("/data/dotnetspider");
 		}
 
 		public JsonFilePipeline(string path)
@@ -32,7 +30,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			string path = BasePath + "/" + task.Identify + "/";
 			try
 			{
-				FileInfo file = GetFile(path + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".json");
+				FileInfo file = PrepareFile(path + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".json");
 				using (StreamWriter printWriter = new StreamWriter(file.OpenWrite(), Encoding.UTF8))
 				{
 					printWriter.WriteLine(JsonConvert.SerializeObject(resultItems.GetAll()));
@@ -40,7 +38,7 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 			}
 			catch (IOException e)
 			{
-				_logger.Warn("write file error", e);
+				Logger.Warn("write file error", e);
 				throw;
 			}
 		}

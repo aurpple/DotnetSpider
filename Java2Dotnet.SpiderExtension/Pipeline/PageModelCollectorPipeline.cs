@@ -1,13 +1,14 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Pipeline;
 
 namespace Java2Dotnet.Spider.Extension.Pipeline
 {
-	public class PageModelCollectorPipeline : ICollectorPipeline
+	internal sealed class PageModelCollectorPipeline : ICollectorPipeline
 	{
-		private readonly CollectorPageModelToDbPipeline _classPipeline = new CollectorPageModelToDbPipeline();
+		private readonly CollectorPageModelPipeline _collectorPipeline = new CollectorPageModelPipeline();
 		private readonly Type _type;
 
 		public PageModelCollectorPipeline(Type type)
@@ -17,18 +18,47 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 
 		public ICollection GetCollected()
 		{
-			return _classPipeline.GetCollected();
+			return _collectorPipeline.GetCollected();
 		}
 
 		//[MethodImplAttribute(MethodImplOptions.Synchronized)]
-		public virtual void Process(ResultItems resultItems, ITask task)
+		public void Process(ResultItems resultItems, ITask task)
 		{
-			dynamic o = resultItems.Get(_type.FullName);
-			if (o != null)
+			if (resultItems == null)
 			{
-				//check
-				_classPipeline.Process(o, task);
+				return;
 			}
+
+			Dictionary<Type, List<dynamic>> resultDictionary = new Dictionary<Type, List<dynamic>>();
+
+			dynamic data = resultItems.Get(_type.FullName);
+
+			if (typeof(IEnumerable).IsAssignableFrom(_type))
+			{
+				if (resultDictionary.ContainsKey(_type))
+				{
+					resultDictionary[_type].AddRange(data);
+				}
+				else
+				{
+					List<dynamic> list = new List<dynamic>();
+					list.AddRange(data);
+					resultDictionary.Add(_type, list);
+				}
+			}
+			else
+			{
+				if (resultDictionary.ContainsKey(_type))
+				{
+					resultDictionary[_type].Add(data);
+				}
+				else
+				{
+					resultDictionary.Add(_type, new List<dynamic> { data });
+				}
+			}
+
+			_collectorPipeline.Process(resultDictionary, task);
 		}
 	}
 }

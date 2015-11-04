@@ -18,10 +18,15 @@ namespace Java2Dotnet.Spider.Extension.DbSupport.Dapper
 		/// <summary>
 		/// 
 		/// </summary>
-		public DataRepository(Func<IDbConnection> func, Type type)
+		public DataRepository(Type type)
 		{
 			SqlGenerator = new MySqlGenerator(type);
-			GetConnection = func;
+
+			if (DbProviderUtil.Provider == null)
+			{
+				DbProviderUtil.Provider = new DataProviderManager().LoadDataProvider();
+			}
+			GetConnection = DbProviderUtil.GetProvider;
 		}
 
 		private ISqlGenerator SqlGenerator { get; }

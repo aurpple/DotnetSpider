@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 
 namespace Java2Dotnet.Spider.Extension.DbSupport
 {
-	public class SqlServerDataProvider : BaseDataProvider
+	public class SqlServerDataProvider : IDataProvider
 	{
 		private readonly DataSettings _dataSettings;
 		private readonly string _host;
@@ -14,7 +14,7 @@ namespace Java2Dotnet.Spider.Extension.DbSupport
 			_host = new SqlConnection(dataSettings.DataConnectionString).DataSource;
 		}
 
-		public override IDbConnection CreateConnection()
+		public IDbConnection CreateConnection()
 		{
 			try
 			{
@@ -28,21 +28,7 @@ namespace Java2Dotnet.Spider.Extension.DbSupport
 			}
 		}
 
-		public override IDbConnection CreateConnection(string connStr)
-		{
-			try
-			{
-				SqlConnection cnn = new SqlConnection(connStr);
-				cnn.Open();
-				return cnn;
-			}
-			catch
-			{
-				return null;
-			}
-		}
-
-		public override string GetHost()
+		public string GetHost()
 		{
 			return _host;
 		}

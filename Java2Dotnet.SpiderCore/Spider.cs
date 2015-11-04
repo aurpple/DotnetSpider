@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -14,6 +17,7 @@ using Java2Dotnet.Spider.Core.Proxy;
 using Java2Dotnet.Spider.Core.Scheduler;
 using Java2Dotnet.Spider.Core.Utils;
 using log4net;
+using Newtonsoft.Json;
 
 namespace Java2Dotnet.Spider.Core
 {
@@ -40,6 +44,8 @@ namespace Java2Dotnet.Spider.Core
 	/// </summary>
 	public class Spider : ITask
 	{
+		public event FlushCachedPipeline FlushEvent;
+
 		[DllImport("User32.dll ", EntryPoint = "FindWindow")]
 		private static extern int FindWindow(string lpClassName, string lpWindowName);
 		[DllImport("user32.dll ", EntryPoint = "GetSystemMenu")]
@@ -47,18 +53,22 @@ namespace Java2Dotnet.Spider.Core
 		[DllImport("user32.dll ", EntryPoint = "RemoveMenu")]
 		private extern static int RemoveMenu(IntPtr hMenu, int nPos, int flags);
 
+		protected readonly string RootDirectory;
+
 		protected IDownloader Downloader { get; set; }
-		protected IList<IPipeline> Pipelines { get; set; } = new List<IPipeline>();
+		protected List<IPipeline> Pipelines { get; set; } = new List<IPipeline>();
 		protected IPageProcessor PageProcessor { get; set; }
 		protected HashSet<Request> StartRequests { get; set; }
 		protected IScheduler Scheduler { get; set; } = new QueueScheduler();
 		public int ThreadNum { get; set; } = 1;
-		protected static ILog Logger;
+		public int Deep { get; set; } = int.MaxValue;
+		protected static readonly ILog Logger = LogManager.GetLogger(typeof(Spider));
 
 		protected readonly static int StatInit = 0;
 		protected readonly static int StatRunning = 1;
 		protected readonly static int StatStopped = 2;
 		protected static readonly int StatFinished = 3;
+		protected static readonly int WaitInterval = 50;
 
 		protected readonly AutomicLong Stat = new AutomicLong(StatInit);
 
@@ -76,6 +86,9 @@ namespace Java2Dotnet.Spider.Core
 		private int _waitCount;
 		private string _identify;
 		private readonly Site _site;
+		private Regex _subHtmlRegex;
+		private static readonly object ErroLogFileLocker = new object();
+		private static readonly Regex IdentifyRegex = new Regex(@"^[\d\w\s-]+$");
 
 		/// <summary>
 		/// Create a spider with pageProcessor.
@@ -84,7 +97,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <returns></returns>
 		public static Spider Create(IPageProcessor pageProcessor)
 		{
-			return new Spider(null, pageProcessor);
+			return new Spider(Guid.NewGuid().ToString(), pageProcessor);
 		}
 
 		/// <summary>
@@ -105,12 +118,24 @@ namespace Java2Dotnet.Spider.Core
 		/// <param name="pageProcessor"></param>
 		protected Spider(string identify, IPageProcessor pageProcessor)
 		{
-			Logger = LogManager.GetLogger(typeof(Spider));
 			_waitCount = 0;
 			PageProcessor = pageProcessor;
 			_site = pageProcessor.Site;
 			StartRequests = pageProcessor.Site.GetStartRequests();
-			_identify = identify;
+			if (string.IsNullOrWhiteSpace(identify))
+			{
+				_identify = Guid.NewGuid().ToString();
+			}
+			else
+			{
+				if (!IdentifyRegex.IsMatch(identify))
+				{
+					throw new SpiderExceptoin("Task Identify only can contains A-Z a-z 0-9 _ -");
+				}
+				_identify = identify;
+			}
+
+			RootDirectory = AppDomain.CurrentDomain.BaseDirectory + "\\data\\dotnetspider\\" + Identify;
 		}
 
 		/// <summary>
@@ -122,7 +147,7 @@ namespace Java2Dotnet.Spider.Core
 		public Spider StartUrls(IList<string> startUrls)
 		{
 			CheckIfRunning();
-			StartRequests = new HashSet<Request>(UrlUtils.ConvertToRequests(startUrls));
+			StartRequests = new HashSet<Request>(UrlUtils.ConvertToRequests(startUrls, 1));
 			return this;
 		}
 
@@ -155,6 +180,13 @@ namespace Java2Dotnet.Spider.Core
 				return _identify;
 			}
 		}
+
+		public void SetSubHtmlRegex(string pattern)
+		{
+			_subHtmlRegex = new Regex(pattern);
+		}
+
+		public bool ShowConsoleProcessStatus { get; set; } = true;
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public bool ShowControl { get; set; }
@@ -191,6 +223,11 @@ namespace Java2Dotnet.Spider.Core
 		public Spider AddPipeline(IPipeline pipeline)
 		{
 			CheckIfRunning();
+			CachedPipeline cachedPipeline = pipeline as CachedPipeline;
+			if (cachedPipeline != null)
+			{
+				FlushEvent += cachedPipeline.Flush;
+			}
 			Pipelines.Add(pipeline);
 			return this;
 		}
@@ -203,7 +240,10 @@ namespace Java2Dotnet.Spider.Core
 		public Spider SetPipelines(List<IPipeline> pipelines)
 		{
 			CheckIfRunning();
-			Pipelines = pipelines;
+			foreach (var pipeline in pipelines)
+			{
+				AddPipeline(pipeline);
+			}
 			return this;
 		}
 
@@ -250,18 +290,34 @@ namespace Java2Dotnet.Spider.Core
 			}
 			if (StartRequests != null)
 			{
-				Parallel.ForEach(StartRequests, new ParallelOptions() { MaxDegreeOfParallelism = 100 }, request =>
+				if (StartRequests.Count > 0)
 				{
-					Scheduler.Push((Request)request.Clone(), this);
-				});
+					Parallel.ForEach(StartRequests, new ParallelOptions() { MaxDegreeOfParallelism = 100 }, request =>
+					{
+						Scheduler.Push((Request)request.Clone(), this);
+					});
 
-				ClearStartRequests();
-				Logger.InfoFormat("Push Request to Scheduler success.");
+					ClearStartRequests();
+					Logger.InfoFormat("Push Request to Scheduler success.");
+				}
+				else
+				{
+					Logger.InfoFormat("Push Zero Request to Scheduler.");
+				}
 			}
 
 			if (!_registConsoleCtrlHandler)
 			{
-				Console.Title = Identify;
+				try
+				{
+					// 在非控制台程序下调用会出异常
+					Console.Title = Identify;
+				}
+				catch (Exception)
+				{
+					// ignored
+				}
+
 				Console.CancelKeyPress += Console_CancelKeyPress;
 				_registConsoleCtrlHandler = true;
 
@@ -297,7 +353,7 @@ namespace Java2Dotnet.Spider.Core
 			Logger.Info("Spider " + Identify + " InitComponent...");
 			InitComponent();
 
-			//IMonitorableScheduler monitor = (IMonitorableScheduler)Scheduler;
+			IMonitorableScheduler monitor = (IMonitorableScheduler)Scheduler;
 
 			Logger.Info("Spider " + Identify + " Started!");
 
@@ -332,8 +388,23 @@ namespace Java2Dotnet.Spider.Core
 
 					ThreadPool.Execute((obj, cts) =>
 					{
-						//Logger.Info(
-						//	$"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
+						if (ShowConsoleProcessStatus)
+						{
+							try
+							{
+								Console.ForegroundColor = ConsoleColor.Green;
+								Console.WriteLine(
+									$"Left: {monitor.GetLeftRequestsCount(this)} Total: {monitor.GetTotalRequestsCount(this)} AliveThread: {ThreadPool.GetThreadAlive()} ThreadNum: {ThreadPool.GetThreadNum()}");
+								Console.ResetColor();
+								Thread.Sleep(800);
+							}
+							catch
+							{
+								Thread.Sleep(800);
+								// ignored
+							}
+						}
+
 						var request1 = obj as Request;
 						if (request1 != null)
 						{
@@ -392,6 +463,8 @@ namespace Java2Dotnet.Spider.Core
 
 		protected void OnClose()
 		{
+			FlushEvent?.Invoke(this);
+
 			if (_spiderListeners != null && _spiderListeners.Count > 0)
 			{
 				foreach (ISpiderListener spiderListener in _spiderListeners)
@@ -403,6 +476,13 @@ namespace Java2Dotnet.Spider.Core
 
 		protected void OnError(Request request)
 		{
+			lock (ErroLogFileLocker)
+			{
+				//写入文件中, 用户从最终的结果可以知道有多少个Request没有跑. 提供ReRun, Spider可以重新载入错误的Request重新跑过
+				FileInfo file = FilePersistentBase.PrepareFile(Path.Combine(RootDirectory, "ErrorRequests.txt"));
+				File.AppendAllText(file.FullName, JsonConvert.SerializeObject(request) + Environment.NewLine, Encoding.UTF8);
+			}
+
 			if (_spiderListeners != null && _spiderListeners.Count > 0)
 			{
 				foreach (ISpiderListener spiderListener in _spiderListeners)
@@ -439,7 +519,7 @@ namespace Java2Dotnet.Spider.Core
 			}
 		}
 
-		public void Close()
+		private void Close()
 		{
 			DestroyEach(Downloader);
 			DestroyEach(PageProcessor);
@@ -477,20 +557,65 @@ namespace Java2Dotnet.Spider.Core
 			{
 				foreach (string url in urls)
 				{
-					ProcessRequest(new Request(url, null));
+					ProcessRequest(new Request(url, 1, null));
 				}
 			}
+		}
+
+		protected Page AddToCycleRetry(Request request, Site site)
+		{
+			Page page = new Page(request);
+			dynamic cycleTriedTimesObject = request.GetExtra(Request.CycleTriedTimes);
+			if (cycleTriedTimesObject == null)
+			{
+				// 把自己加到目标Request中(无法控制主线程再加载此Request), 传到主线程后会把TargetRequest加到Pool中
+				request.Priority = 0;
+				page.AddTargetRequest(request.PutExtra(Request.CycleTriedTimes, 1));
+			}
+			else
+			{
+				int cycleTriedTimes = (int)cycleTriedTimesObject;
+				cycleTriedTimes++;
+				if (cycleTriedTimes >= site.CycleRetryTimes)
+				{
+					// 超过最大尝试次数, 返回空.
+					return null;
+				}
+				request.Priority = 0;
+				page.AddTargetRequest(request.PutExtra(Request.CycleTriedTimes, cycleTriedTimes));
+			}
+			page.SetNeedCycleRetry(true);
+			return page;
 		}
 
 		protected void ProcessRequest(Request request, CancellationTokenSource cts = null)
 		{
 			cts?.Cancel();
 
+			Page page = null;
+
 			//Stopwatch watch = new Stopwatch();
 			//watch.Start();
+			try
+			{
+				// 下载页面
+				page = Downloader.Download(request, this);
 
-			// 下载页面
-			Page page = Downloader.Download(request, this);
+				// 处理HTML截取
+				if (_subHtmlRegex != null)
+				{
+					page.SetRawText(_subHtmlRegex.Match(page.GetRawText()).Value);
+				}
+			}
+			catch (Exception e)
+			{
+				if (_site.CycleRetryTimes > 0)
+				{
+					page = AddToCycleRetry(request, _site);
+				}
+
+				Logger.Warn("Download page " + request.Url + " failed.", e);
+			}
 
 			//watch.Stop();
 			//Logger.Info("dowloader cost time:" + watch.ElapsedMilliseconds);
@@ -515,6 +640,7 @@ namespace Java2Dotnet.Spider.Core
 			//watch.Start();
 
 			// 解析页面数据
+			// PageProcess中2种错误：1 下载的HTML有误 2是实现的IPageProcessor有误
 			PageProcessor.Process(page);
 
 			//watch.Stop();
@@ -525,6 +651,9 @@ namespace Java2Dotnet.Spider.Core
 			if (page.MissTargetUrls)
 			{
 				Logger.Info($"Stoper trigger worked on this page.");
+			}
+			else
+			{
 				ExtractAndAddRequests(page, SpawnUrl);
 			}
 
@@ -533,6 +662,7 @@ namespace Java2Dotnet.Spider.Core
 			//watch = new Stopwatch();
 			//watch.Start();
 
+			// Pipeline是做最后的数据保存等工作, 是不允许出任何差错的, 如果出错,数据存一半肯定也是脏数据, 因此直接挂掉Spider比较好。
 			if (!page.GetResultItems().IsSkip)
 			{
 				foreach (IPipeline pipeline in Pipelines)
@@ -559,7 +689,7 @@ namespace Java2Dotnet.Spider.Core
 
 		protected void ExtractAndAddRequests(Page page, bool spawnUrl)
 		{
-			if (spawnUrl && page.GetTargetRequests() != null && page.GetTargetRequests().Count > 0)
+			if (spawnUrl && page.GetRequest().NextDeep() < Deep && page.GetTargetRequests() != null && page.GetTargetRequests().Count > 0)
 			{
 				foreach (Request request in page.GetTargetRequests())
 				{
@@ -591,7 +721,7 @@ namespace Java2Dotnet.Spider.Core
 			{
 				if (t.Exception != null)
 				{
-					Logger.Error(t.Exception);
+					Logger.Error(t.Exception.Message);
 				}
 			});
 		}
@@ -605,7 +735,7 @@ namespace Java2Dotnet.Spider.Core
 		{
 			foreach (string url in urls)
 			{
-				AddRequest(new Request(url, null));
+				AddRequest(new Request(url, 1, null));
 			}
 			return this;
 		}
@@ -614,33 +744,83 @@ namespace Java2Dotnet.Spider.Core
 		{
 			foreach (string url in urls)
 			{
-				AddRequest(new Request(url, null));
+				AddRequest(new Request(url, 1, null));
 			}
 			return this;
 		}
 
-		/// <summary>
-		/// Download urls synchronizing.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="urls"></param>
-		/// <returns></returns>
-		public IList<T> GetAll<T>(params string[] urls)
+		///// <summary>
+		///// Download urls synchronizing.
+		///// </summary>
+		///// <typeparam name="T"></typeparam>
+		///// <param name="urls"></param>
+		///// <returns></returns>
+		//public IList<T> GetAll<T>(params string[] urls)
+		//{
+		//	DestroyWhenExit = false;
+		//	SpawnUrl = false;
+
+		//	foreach (Request request in UrlUtils.ConvertToRequests(urls, 1))
+		//	{
+		//		AddRequest(request);
+		//	}
+		//	ICollectorPipeline collectorPipeline = GetCollectorPipeline<T>();
+		//	Pipelines.Clear();
+		//	Pipelines.Add(collectorPipeline);
+		//	Run();
+		//	SpawnUrl = true;
+		//	DestroyWhenExit = true;
+
+		//	ICollection collection = collectorPipeline.GetCollected();
+
+		//	try
+		//	{
+		//		return (from object current in collection select (T)current).ToList();
+		//	}
+		//	catch (Exception)
+		//	{
+		//		throw new SpiderExceptoin($"Your pipeline didn't extract data to model: {typeof(T).FullName}");
+		//	}
+		//}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public Dictionary<Type, List<dynamic>> GetAll(Type[] types, params string[] urls)
 		{
 			DestroyWhenExit = false;
 			SpawnUrl = false;
 
-			foreach (Request request in UrlUtils.ConvertToRequests(urls))
+			foreach (Request request in UrlUtils.ConvertToRequests(urls, 1))
 			{
 				AddRequest(request);
 			}
-			ICollectorPipeline collectorPipeline = GetCollectorPipeline();
-			Pipelines.Add(collectorPipeline);
+			List<ICollectorPipeline> collectorPipelineList = GetCollectorPipeline(types);
+			Pipelines.Clear();
+			Pipelines.AddRange(collectorPipelineList);
 			Run();
 			SpawnUrl = true;
 			DestroyWhenExit = true;
-			ICollection collection = collectorPipeline.GetCollected();
-			return (from object o in collection select (T)o).ToList();
+
+			Dictionary<Type, List<dynamic>> result = new Dictionary<Type, List<dynamic>>();
+			foreach (var collectorPipeline in collectorPipelineList)
+			{
+				ICollection collection = collectorPipeline.GetCollected();
+
+				foreach (var entry in collection)
+				{
+					var de = (KeyValuePair<Type, List<dynamic>>)entry;
+
+					if (result.ContainsKey(de.Key))
+					{
+						result[de.Key].AddRange(de.Value);
+					}
+					else
+					{
+						result.Add(de.Key, new List<dynamic>(de.Value));
+					}
+				}
+			}
+
+			return result;
 		}
 
 		[MethodImpl(MethodImplOptions.Synchronized)]
@@ -655,20 +835,20 @@ namespace Java2Dotnet.Spider.Core
 			GC.Collect();
 		}
 
-		protected virtual ICollectorPipeline GetCollectorPipeline()
+		protected virtual List<ICollectorPipeline> GetCollectorPipeline(params Type[] types)
 		{
-			return new ResultItemsCollectorPipeline();
+			return new List<ICollectorPipeline>() { new ResultItemsCollectorPipeline() };
 		}
 
-		public T Get<T>(string url)
-		{
-			IList<T> resultItemses = GetAll<T>(url);
-			if (resultItemses != null && resultItemses.Count > 0)
-			{
-				return resultItemses[0];
-			}
-			return default(T);
-		}
+		//public T Get<T>(string url)
+		//{
+		//	IList<T> resultItemses = GetAll<T>(url);
+		//	if (resultItemses != null && resultItemses.Count > 0)
+		//	{
+		//		return resultItemses[0];
+		//	}
+		//	return default(T);
+		//}
 
 		/// <summary>
 		/// Add urls with information to crawl.
@@ -693,7 +873,7 @@ namespace Java2Dotnet.Spider.Core
 			//	return;
 			//}
 
-			Thread.Sleep(1000);
+			Thread.Sleep(WaitInterval);
 			++_waitCount;
 		}
 
@@ -706,11 +886,15 @@ namespace Java2Dotnet.Spider.Core
 		{
 			if (Stat.CompareAndSet(StatRunning, StatStopped))
 			{
-				Logger.Info("Spider " + Identify + " stop success!");
+				Console.ForegroundColor = ConsoleColor.Yellow;
+				Console.WriteLine("Spider " + Identify + " stop success!");
+				Console.ResetColor();
 			}
 			else
 			{
+				Console.ForegroundColor = ConsoleColor.Red;
 				Logger.Info("Spider " + Identify + " stop fail!");
+				Console.ResetColor();
 			}
 		}
 
@@ -861,7 +1045,7 @@ namespace Java2Dotnet.Spider.Core
 		{
 			if (emptySleepTime > 10000)
 			{
-				_waitCountLimit = emptySleepTime / 1000;
+				_waitCountLimit = emptySleepTime / WaitInterval;
 			}
 			else
 			{

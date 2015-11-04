@@ -12,8 +12,6 @@ namespace Java2Dotnet.Spider.Core.Selector
 	/// </summary>
 	public class Html : HtmlNode
 	{
-		private static readonly ILog Logger = LogManager.GetLogger(typeof(Html));
-
 		/// <summary>
 		/// Store parsed document for better performance when only one text exist.
 		/// </summary>

@@ -2,7 +2,7 @@
 
 namespace Java2Dotnet.Spider.Extension.Model
 {
-	public class BaseEntity
+	public class SpiderEntity
 	{
 		[StoredAs("id", StoredAs.ValueType.Long, true)]
 		[KeyProperty(Identity = true)]

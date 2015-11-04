@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Extension.Model;
 using Java2Dotnet.Spider.Extension.Model.Attribute;
@@ -31,12 +32,12 @@ namespace Java2Dotnet.Spider.Samples.Model
 			site.SleepTime = 0;
 			site.RetryTimes = 3;
 
-			OoSpider.Create(site, new CollectorPageModelToDbPipeline(),typeof(OschinaBlog)).SetThreadNum(1).Run();
+			OoSpider.Create(site, new PageModelToDbPipeline(),typeof(OschinaBlog)).SetThreadNum(1).Run();
 		}
 
 		private class TestPageModelPipeline : IPageModelPipeline
 		{
-			public void Process(dynamic o, ITask task)
+			public void Process(Dictionary<Type, List<dynamic>> data, ITask task)
 			{
 			}
 		}

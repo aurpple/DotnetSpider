@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Java2Dotnet.Spider.Core;
+using Java2Dotnet.Spider.Core.Scheduler;
 using Java2Dotnet.Spider.Core.Utils;
 using Java2Dotnet.Spider.Extension.DbSupport.Dapper.Attributes;
 using Java2Dotnet.Spider.Extension.Model;
@@ -17,14 +18,17 @@ namespace Java2Dotnet.Spider.Samples
 	[ExtractBy(Value = "//*[@id=\"list-job-id\"]/div[9]/dl", Multi = true)]
 	[Scheme("ganji")]
 	[StoredAs("post")]
-	public class Ganji : BaseEntity
+	public class Ganji : SpiderEntity
 	{
 		public static void RunTask()
 		{
-			OoSpider ooSpider = OoSpider.Create("ganji_posts_" + DateTime.Now.Date.ToString("yyyy-MM-dd"), new Site { SleepTime = 1000, Encoding = Encoding.UTF8 }, new CollectorPageModelToDbPipeline(), typeof(Ganji));
+			OoSpider ooSpider = OoSpider.Create("ganji_posts_" + DateTime.Now.Date.ToString("yyyy-MM-dd"),
+				new Site { SleepTime = 1000, Encoding = Encoding.UTF8 },
+				new PageModelToDbPipeline(), typeof(Ganji));
 			ooSpider.SetEmptySleepTime(15000);
-			ooSpider.SetThreadNum(10);
-			ooSpider.SetScheduler(new RedisScheduler("localhost", ""));
+			ooSpider.SetThreadNum(1);
+			ooSpider.ModelPipeline.CachedSize = 2;
+			ooSpider.SetScheduler(new QueueScheduler());
 			ooSpider.AddUrl("http://sh.ganji.com/zpdianhuaxiaoshou/o1/");
 			ooSpider.Run();
 		}

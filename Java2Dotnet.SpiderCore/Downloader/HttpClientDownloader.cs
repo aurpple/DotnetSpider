@@ -29,19 +29,10 @@ namespace Java2Dotnet.Spider.Core.Downloader
 
 			Site site = task.Site;
 
-			ICollection<int> acceptStatCode;
-			Encoding charset = null;
-			IDictionary headers = null;
-			if (site != null)
-			{
-				acceptStatCode = site.AcceptStatCode;
-				charset = site.Encoding;
-				headers = site.GetHeaders();
-			}
-			else
-			{
-				acceptStatCode = new HashSet<int> { 200 };
-			}
+			ICollection<int> acceptStatCode = site.AcceptStatCode;
+			var charset = site.Encoding;
+			var headers = site.GetHeaders();
+
 			//Logger.InfoFormat("Downloading page {0}", request.Url);
 
 			int statusCode = 0;
@@ -55,7 +46,17 @@ namespace Java2Dotnet.Spider.Core.Downloader
 				request.PutExtra(Request.StatusCode, statusCode);
 				if (StatusAccept(acceptStatCode, statusCode))
 				{
-					Page page = HandleResponse(request, charset, response, statusCode, task);
+					Page page = HandleResponse(request, charset, response, statusCode);
+
+					//customer verify
+					if (DownloadVerifyEvent != null)
+					{
+						string msg = "";
+						if (!DownloadVerifyEvent(page, ref msg))
+						{
+							throw new SpiderExceptoin(msg);
+						}
+					}
 
 					// 结束后要置空, 这个值存到Redis会导置无限循环跑单个任务
 					request.PutExtra(Request.CycleTriedTimes, null);
@@ -68,15 +69,6 @@ namespace Java2Dotnet.Spider.Core.Downloader
 				{
 					throw new SpiderExceptoin("Download failed.");
 				}
-			}
-			catch (Exception e)
-			{
-				if (site.CycleRetryTimes > 0)
-				{
-					return AddToCycleRetry(request, site);
-				}
-				OnError(request, e);
-				return null;
 			}
 			finally
 			{
@@ -95,12 +87,12 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			}
 		}
 
-		protected bool StatusAccept(ICollection<int> acceptStatCode, int statusCode)
+		private bool StatusAccept(ICollection<int> acceptStatCode, int statusCode)
 		{
 			return acceptStatCode.Contains(statusCode);
 		}
 
-		protected HttpWebRequest GeneratorCookie(HttpWebRequest httpWebRequest, Site site)
+		private HttpWebRequest GeneratorCookie(HttpWebRequest httpWebRequest, Site site)
 		{
 			CookieContainer cookie = new CookieContainer();
 			foreach (var entry in site.GetAllCookies())
@@ -118,7 +110,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			return httpWebRequest;
 		}
 
-		protected HttpWebRequest GetHttpWebRequest(Request request, Site site, IDictionary headers)
+		private HttpWebRequest GetHttpWebRequest(Request request, Site site, IDictionary headers)
 		{
 			if (site == null) return null;
 
@@ -153,14 +145,6 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			httpWebRequest.ReadWriteTimeout = site.Timeout;
 			httpWebRequest.AllowAutoRedirect = true;
 
-			if (headers != null)
-			{
-				foreach (DictionaryEntry entry in headers)
-				{
-					httpWebRequest.Headers.Add(entry.Key.ToString(), entry.Value.ToString());
-				}
-			}
-
 			if (site.GetHttpProxyPool().Enable)
 			{
 				HttpHost host = site.GetHttpProxyFromPool();
@@ -171,7 +155,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			return httpWebRequest;
 		}
 
-		protected HttpWebRequest SelectRequestMethod(Request request)
+		private HttpWebRequest SelectRequestMethod(Request request)
 		{
 			HttpWebRequest webrequest = (HttpWebRequest)WebRequest.Create(request.Url);
 			if (request.Method == null || request.Method.ToUpper().Equals(HttpConstant.Method.Get))
@@ -208,7 +192,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			throw new ArgumentException("Illegal HTTP Method " + request.Method);
 		}
 
-		protected Page HandleResponse(Request request, Encoding charset, HttpWebResponse response, int statusCode, ITask task)
+		private Page HandleResponse(Request request, Encoding charset, HttpWebResponse response, int statusCode)
 		{
 			string content = GetContent(charset, response);
 			if (string.IsNullOrEmpty(content))
@@ -218,12 +202,13 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			content = HttpUtility.UrlDecode(HttpUtility.HtmlDecode(content), charset);
 			Page page = new Page(request);
 			page.SetRawText(content);
+			page.SetTargetUrl(new PlainText(response.ResponseUri.ToString()));
 			page.SetUrl(new PlainText(request.Url));
 			page.SetStatusCode(statusCode);
 			return page;
 		}
 
-		protected string GetContent(Encoding charset, HttpWebResponse response)
+		private string GetContent(Encoding charset, HttpWebResponse response)
 		{
 			byte[] contentBytes = GetContentBytes(response);
 
@@ -266,7 +251,7 @@ namespace Java2Dotnet.Spider.Core.Downloader
 			return null;
 		}
 
-		protected Encoding GetHtmlCharset(string contentType, byte[] contentBytes)
+		private Encoding GetHtmlCharset(string contentType, byte[] contentBytes)
 		{
 			// charset
 			// 1、encoding in http header Content-Type

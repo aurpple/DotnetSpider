@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,10 +14,10 @@ namespace Java2Dotnet.Spider.Core
 	/// </summary>
 	public class Site
 	{
-		private readonly IDictionary _defaultCookies = new ListDictionary();
+		private readonly Dictionary<string, string> _defaultCookies = new Dictionary<string, string>();
 		private readonly Dictionary<string, Dictionary<string, string>> _cookies = new Dictionary<string, Dictionary<string, string>>();
 		private readonly HashSet<Request> _startRequests = new HashSet<Request>();
-		private readonly IDictionary _headers = new Hashtable();
+		private readonly Hashtable _headers = new Hashtable();
 		private ProxyPool _httpProxyPool = new ProxyPool();
 
 		//public static Site NewSite()
@@ -34,7 +33,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <returns></returns>
 		public Site AddCookie(string name, string value)
 		{
-			if (_defaultCookies.Contains(name))
+			if (_defaultCookies.ContainsKey(name))
 			{
 				_defaultCookies[name] = value;
 			}
@@ -81,7 +80,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <summary>
 		/// Get cookies
 		/// </summary>
-		public IDictionary GetCookies()
+		public Dictionary<string, string> GetCookies()
 		{
 			return _defaultCookies;
 		}
@@ -159,7 +158,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <returns></returns>
 		public Site AddStartUrl(string startUrl)
 		{
-			return AddStartRequest(new Request(startUrl, null));
+			return AddStartRequest(new Request(startUrl, 1, null));
 		}
 
 		/// <summary>
@@ -171,7 +170,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <returns></returns>
 		public Site AddStartUrl(string startUrl, IDictionary<string, object> data)
 		{
-			return AddStartRequest(new Request(startUrl, data));
+			return AddStartRequest(new Request(startUrl, 1, data));
 		}
 
 		public Site AddStartUrls(IList<string> startUrls)
@@ -215,7 +214,7 @@ namespace Java2Dotnet.Spider.Core
 		/// Set the interval between the processing of two pages. 
 		/// Time unit is micro seconds. 
 		/// </summary>
-		public int SleepTime { get; set; } = 5000;
+		public int SleepTime { get; set; } = 500;
 
 		/// <summary>
 		/// Get or Set retry times immediately when download fail, 5 by default.
@@ -248,7 +247,7 @@ namespace Java2Dotnet.Spider.Core
 		/// <summary>
 		/// When cycleRetryTimes is more than 0, it will add back to scheduler and try download again. 
 		/// </summary>
-		public int CycleRetryTimes { get; set; } = 100000;
+		public int CycleRetryTimes { get; set; } = 10;
 
 		/// <summary>
 		/// Set or Get up httpProxy for this site

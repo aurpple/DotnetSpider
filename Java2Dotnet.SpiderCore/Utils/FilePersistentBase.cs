@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using log4net;
 
 namespace Java2Dotnet.Spider.Core.Utils
 {
@@ -8,11 +9,12 @@ namespace Java2Dotnet.Spider.Core.Utils
 	/// </summary>
 	public class FilePersistentBase : ContextBoundObject
 	{
+		protected readonly ILog Logger = LogManager.GetLogger(typeof(FilePersistentBase));
 		protected string BasePath;
 
-		public static string PathSeperator = "/";
+		protected static string PathSeperator = "/";
 
-		public void SetPath(string path)
+		protected void SetPath(string path)
 		{
 			if (!path.EndsWith(PathSeperator))
 			{
@@ -21,13 +23,18 @@ namespace Java2Dotnet.Spider.Core.Utils
 			BasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
 		}
 
-		public FileInfo GetFile(string fullName)
+		public static FileInfo PrepareFile(string fullName)
 		{
 			CheckAndMakeParentDirecotry(fullName);
 			return new FileInfo(fullName);
 		}
 
-		public void CheckAndMakeParentDirecotry(string fullName)
+		public static DirectoryInfo PrepareDirectory(string fullName)
+		{
+			return new DirectoryInfo(CheckAndMakeParentDirecotry(fullName));
+		}
+
+		private static string CheckAndMakeParentDirecotry(string fullName)
 		{
 			string path = Path.GetDirectoryName(fullName);
 
@@ -39,6 +46,7 @@ namespace Java2Dotnet.Spider.Core.Utils
 					directory.Create();
 				}
 			}
+			return path;
 		}
 	}
 }

@@ -14,12 +14,6 @@ namespace Java2Dotnet.Spider.Extension.DbSupport
 		IDbConnection CreateConnection();
 
 		/// <summary>
-		/// Create a connection
-		/// </summary>
-		/// <returns></returns>
-		IDbConnection CreateConnection(string connStr);
-
-		/// <summary>
 		/// 
 		/// </summary>
 		/// <returns></returns>

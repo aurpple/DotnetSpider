@@ -8,7 +8,7 @@ namespace Java2Dotnet.Spider.Extension.Monitor
 	{
 		protected readonly Core.Spider Spider;
 
-		protected readonly log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(SpiderStatus));
+		protected static readonly log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(SpiderStatus));
 
 		protected readonly SpiderMonitor.MonitorSpiderListener MonitorSpiderListener;
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Java2Dotnet.Spider.Core;
@@ -24,6 +25,8 @@ namespace Java2Dotnet.Spider.Extension.Model
 		private List<FieldExtractor> _fieldExtractors;
 		private Extractor _objectExtractor;
 		private readonly static log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(PageModelExtractor));
+		private static readonly WebClient WebClient = new WebClient();
+		private static readonly Regex UrlRegex = new Regex(@"((http|https|ftp):(\/\/|\\\\)((\w)+[.]){1，}(net|com|cn|org|cc|tv|[0-9]{1，3})(((\/[\~]*|\\[\~]*)(\w)+)|[.](\w)+)*(((([?](\w)+){1}[=]*))*((\w)+){1}([\&](\w)+[\=](\w)+)*)*)");
 
 		private PageModelExtractor(Type type)
 		{
@@ -38,16 +41,18 @@ namespace Java2Dotnet.Spider.Extension.Model
 			return pageModelExtractor;
 		}
 
-		private FieldExtractor GetAnnotationExtractBy(PropertyInfo field)
+		private FieldExtractor GetAttributeExtractBy(PropertyInfo field)
 		{
 			FieldExtractor fieldExtractor = null;
 			ExtractBy extractBy = (ExtractBy)field.GetCustomAttribute(typeof(ExtractBy));
 			if (extractBy != null)
 			{
 				ISelector selector = ExtractorUtils.GetSelector(extractBy);
+				// 改为由属性类型决定是否为List, Attribte可能会错, Property可能更可靠
 				fieldExtractor = new FieldExtractor(field, selector, extractBy.Source,
-					extractBy.NotNull, extractBy.Multi || field.PropertyType.IsGenericType);
+					extractBy.NotNull, field.PropertyType.IsGenericType);
 			}
+
 			return fieldExtractor;
 		}
 
@@ -57,14 +62,14 @@ namespace Java2Dotnet.Spider.Extension.Model
 			_fieldExtractors = new List<FieldExtractor>();
 			foreach (PropertyInfo field in _modelType.GetProperties())
 			{
-				FieldExtractor fieldExtractor = GetAnnotationExtractBy(field);
-				FieldExtractor fieldExtractorTmp = GetAnnotationExtractCombo(field);
+				FieldExtractor fieldExtractor = GetAttributeExtractBy(field);
+				FieldExtractor fieldExtractorTmp = GetAttributeExtractCombo(field);
 
 				if (fieldExtractor == null && fieldExtractorTmp != null)
 				{
 					fieldExtractor = fieldExtractorTmp;
 				}
-				fieldExtractorTmp = GetAnnotationExtractByUrl(field);
+				fieldExtractorTmp = GetAttributeExtractByUrl(field);
 				if (fieldExtractor == null && fieldExtractorTmp != null)
 				{
 					fieldExtractor = fieldExtractorTmp;
@@ -77,7 +82,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 		}
 
-		private FieldExtractor GetAnnotationExtractCombo(PropertyInfo field)
+		private FieldExtractor GetAttributeExtractCombo(PropertyInfo field)
 		{
 			FieldExtractor fieldExtractor = null;
 			ComboExtract comboExtract = field.GetCustomAttribute<ComboExtract>();
@@ -137,10 +142,11 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 			else
 			{
-				if (!field.PropertyType.IsGenericType)
-				{
-					throw new SpiderExceptoin("Field " + field.Name + " must be generice type.");
-				}
+				// 注释掉, 已经改为从属性得IsMulti值了, 不可能两边不一至。
+				//if (!field.PropertyType.IsGenericType)
+				//{
+				//	throw new SpiderExceptoin("Field " + field.Name + " must be generice type.");
+				//}
 
 				Type[] genericType = field.PropertyType.GetGenericArguments();
 				if (genericType.Length != 1)
@@ -166,7 +172,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 			}
 		}
 
-		private FieldExtractor GetAnnotationExtractByUrl(PropertyInfo field)
+		private FieldExtractor GetAttributeExtractByUrl(PropertyInfo field)
 		{
 			FieldExtractor fieldExtractor = null;
 			ExtractByUrl extractByUrl = field.GetCustomAttribute<ExtractByUrl>();
@@ -283,194 +289,225 @@ namespace Java2Dotnet.Spider.Extension.Model
 
 		private object ProcessSingle(Page page, string html, bool isRaw)
 		{
-			object o = null;
-			try
+			object instance = Activator.CreateInstance(_modelType);
+			foreach (FieldExtractor fieldExtractor in _fieldExtractors)
 			{
-				o = Activator.CreateInstance(_modelType);
-				foreach (FieldExtractor fieldExtractor in _fieldExtractors)
+				if (fieldExtractor.Multi)
 				{
-					if (fieldExtractor.Multi)
+					IList<string> value = null;
+					switch (fieldExtractor.Source)
 					{
-						IList<string> value = null;
-						switch (fieldExtractor.Source)
+						case ExtractSource.RawHtml:
+							value = page.GetHtml().SelectDocumentForList(fieldExtractor.Selector);
+							break;
+						case ExtractSource.Html:
+							value = isRaw ? page.GetHtml().SelectDocumentForList(fieldExtractor.Selector) : fieldExtractor.Selector.SelectList(html);
+							break;
+						case ExtractSource.Url:
+							value = fieldExtractor.Selector.SelectList(page.GetUrl().ToString());
+							break;
+						case ExtractSource.Enviroment:
+							{
+								EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
+								if (selector != null) value = selector.GetValueList(page);
+								break;
+							}
+						default:
+							value = fieldExtractor.Selector.SelectList(html);
+							break;
+					}
+					if ((value == null || value.Count == 0) && fieldExtractor.NotNull)
+					{
+						return null;
+					}
+
+					if (fieldExtractor.ObjectFormatter != null)
+					{
+						//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
+						//{
+						//	MemoryStream stream = new MemoryStream();
+						//	StreamWriter writer = new StreamWriter(stream);
+						//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
+						//	writer.Flush();
+
+						//	// convert stream to string  
+						//	stream.Position = 0;
+						//	AntlrInputStream input = new AntlrInputStream(stream);
+						//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
+						//	CommonTokenStream tokens = new CommonTokenStream(lexer);
+						//	// implement custom expresion
+						//	IList<string> tmp = new List<string>();
+						//	bool missTargetUrls = false;
+						//	// ReSharper disable once PossibleNullReferenceException
+						//	foreach (string d in value)
+						//	{
+						//		lexer.Reset();
+						//		tokens.Reset();
+
+						//		ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d, fieldExtractor.Field);
+						//		ModifyScriptParser parser = new ModifyScriptParser(tokens);
+						//		modifyScriptVisitor.Visit(parser.stats());
+						//		if (!string.IsNullOrEmpty(modifyScriptVisitor.Value))
+						//		{
+						//			tmp.Add(modifyScriptVisitor.Value);
+						//		}
+						//		if (!missTargetUrls && modifyScriptVisitor.NeedStop)
+						//		{
+						//			missTargetUrls = true;
+						//		}
+						//	}
+						//	page.MissTargetUrls = missTargetUrls;
+						//	value = tmp;
+						//}
+
+						IList<dynamic> converted = Convert(value, fieldExtractor.ObjectFormatter);
+
+						if (fieldExtractor.Stoper != null)
 						{
-							case ExtractSource.RawHtml:
-								value = page.GetHtml().SelectDocumentForList(fieldExtractor.Selector);
-								break;
-							case ExtractSource.Html:
-								value = isRaw ? page.GetHtml().SelectDocumentForList(fieldExtractor.Selector) : fieldExtractor.Selector.SelectList(html);
-								break;
-							case ExtractSource.Url:
-								value = fieldExtractor.Selector.SelectList(page.GetUrl().ToString());
-								break;
-							case ExtractSource.Enviroment:
+							foreach (string d in converted)
+							{
+								if (fieldExtractor.Stoper.NeedStop(d) && !page.MissTargetUrls)
 								{
-									EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
-									if (selector != null) value = selector.GetValueList(page);
+									page.MissTargetUrls = true;
 									break;
 								}
-							default:
-								value = fieldExtractor.Selector.SelectList(html);
-								break;
-						}
-						if ((value == null || value.Count == 0) && fieldExtractor.NotNull)
-						{
-							return null;
+							}
 						}
 
-						if (fieldExtractor.ObjectFormatter != null)
+						dynamic field = fieldExtractor.Field.GetValue(instance) ?? Activator.CreateInstance(fieldExtractor.Field.PropertyType);
+
+						Type[] genericType = fieldExtractor.Field.PropertyType.GetGenericArguments();
+						MethodInfo method = fieldExtractor.Field.PropertyType.GetMethod("Add", genericType);
+
+						if (fieldExtractor.Download)
 						{
-							//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
-							//{
-							//	MemoryStream stream = new MemoryStream();
-							//	StreamWriter writer = new StreamWriter(stream);
-							//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
-							//	writer.Flush();
-
-							//	// convert stream to string  
-							//	stream.Position = 0;
-							//	AntlrInputStream input = new AntlrInputStream(stream);
-							//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
-							//	CommonTokenStream tokens = new CommonTokenStream(lexer);
-							//	// implement custom expresion
-							//	IList<string> tmp = new List<string>();
-							//	bool missTargetUrls = false;
-							//	// ReSharper disable once PossibleNullReferenceException
-							//	foreach (string d in value)
-							//	{
-							//		lexer.Reset();
-							//		tokens.Reset();
-
-							//		ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(d, fieldExtractor.Field);
-							//		ModifyScriptParser parser = new ModifyScriptParser(tokens);
-							//		modifyScriptVisitor.Visit(parser.stats());
-							//		if (!string.IsNullOrEmpty(modifyScriptVisitor.Value))
-							//		{
-							//			tmp.Add(modifyScriptVisitor.Value);
-							//		}
-							//		if (!missTargetUrls && modifyScriptVisitor.NeedStop)
-							//		{
-							//			missTargetUrls = true;
-							//		}
-							//	}
-							//	page.MissTargetUrls = missTargetUrls;
-							//	value = tmp;
-							//}
-
-							IList<dynamic> converted = Convert(value, fieldExtractor.ObjectFormatter);
-
-							if (fieldExtractor.Stoper != null)
+							List<string> urlList = new List<string>();
+							foreach (var url in converted)
 							{
-								foreach (string d in converted)
+								// 不需要判断为空, 前面已经判断过了
+								if (UrlRegex.IsMatch(url))
 								{
-									if (fieldExtractor.Stoper.NeedStop(d) && !page.MissTargetUrls)
-									{
-										page.MissTargetUrls = true;
-										break;
-									}
+									urlList.Add(url);
 								}
 							}
-
-							dynamic field = fieldExtractor.Field.GetValue(o) ?? Activator.CreateInstance(fieldExtractor.Field.PropertyType);
-
-							Type[] genericType = fieldExtractor.Field.PropertyType.GetGenericArguments();
-							MethodInfo method = fieldExtractor.Field.PropertyType.GetMethod("Add", genericType);
-							foreach (var v in converted)
-							{
-								method.Invoke(field, new object[] { v });
-							}
-
-							fieldExtractor.Field.SetValue(o, field);
+							page.PutField(Page.Images, urlList);
 						}
-						else
+
+						foreach (var v in converted)
 						{
-							fieldExtractor.Field.SetValue(o, value);
+							method.Invoke(field, new object[] { v });
 						}
+
+						fieldExtractor.Field.SetValue(instance, field);
 					}
 					else
 					{
-						string value = null;
-						switch (fieldExtractor.Source)
+						fieldExtractor.Field.SetValue(instance, value);
+
+						if (fieldExtractor.Download)
 						{
-							case ExtractSource.RawHtml:
-								value = page.GetHtml().SelectDocument(fieldExtractor.Selector);
-								break;
-							case ExtractSource.Html:
-								value = isRaw ? page.GetHtml().SelectDocument(fieldExtractor.Selector) : fieldExtractor.Selector.Select(html);
-								break;
-							case ExtractSource.Url:
-								value = fieldExtractor.Selector.Select(page.GetUrl().ToString());
-								break;
-							case ExtractSource.Enviroment:
+							List<string> urlList = new List<string>();
+							foreach (var url in value)
+							{
+								// 不需要判断为空, 前面已经判断过了
+								if (UrlRegex.IsMatch(url))
 								{
-									EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
-									if (selector != null)
-									{
-										value = selector.GetValue(page)?.ToString();
-									}
-									break;
+									urlList.Add(url);
 								}
-							default:
-								value = fieldExtractor.Selector.Select(html);
-								break;
-						}
-						if (value == null && fieldExtractor.NotNull)
-						{
-							return null;
-						}
-						if (fieldExtractor.ObjectFormatter != null)
-						{
-							//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
-							//{
-							//	MemoryStream stream = new MemoryStream();
-							//	StreamWriter writer = new StreamWriter(stream);
-							//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
-							//	writer.Flush();
-
-							//	// convert stream to string  
-							//	stream.Position = 0;
-							//	AntlrInputStream input = new AntlrInputStream(stream);
-
-							//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
-							//	CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-							//	ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value, fieldExtractor.Field);
-							//	ModifyScriptParser parser = new ModifyScriptParser(tokens);
-
-							//	modifyScriptVisitor.Visit(parser.stats());
-							//	value = modifyScriptVisitor.Value;
-							//	page.MissTargetUrls = modifyScriptVisitor.NeedStop;
-							//}
-
-							dynamic converted = Convert(value, fieldExtractor.ObjectFormatter);
-
-							if (converted == null && fieldExtractor.NotNull)
-							{
-								return null;
 							}
-
-							if (fieldExtractor.Stoper != null && !page.MissTargetUrls)
-							{
-								page.MissTargetUrls = fieldExtractor.Stoper.NeedStop(converted);
-							}
-
-							fieldExtractor.Field.SetValue(o, converted);
-						}
-						else
-						{
-							fieldExtractor.Field.SetValue(o, value);
+							page.PutField(Page.Images, urlList);
 						}
 					}
 				}
+				else
+				{
+					string value = null;
+					switch (fieldExtractor.Source)
+					{
+						case ExtractSource.RawHtml:
+							value = page.GetHtml().SelectDocument(fieldExtractor.Selector);
+							break;
+						case ExtractSource.Html:
+							value = isRaw ? page.GetHtml().SelectDocument(fieldExtractor.Selector) : fieldExtractor.Selector.Select(html);
+							break;
+						case ExtractSource.Url:
+							value = fieldExtractor.Selector.Select(page.GetUrl().ToString());
+							break;
+						case ExtractSource.Enviroment:
+							{
+								EnviromentSelector selector = fieldExtractor.Selector as EnviromentSelector;
+								if (selector != null)
+								{
+									value = selector.GetValue(page)?.ToString();
+								}
+								break;
+							}
+						default:
+							value = fieldExtractor.Selector.Select(html);
+							break;
+					}
+					if (value == null && fieldExtractor.NotNull)
+					{
+						return null;
+					}
+					if (fieldExtractor.ObjectFormatter != null)
+					{
+						//if (!string.IsNullOrEmpty(fieldExtractor.Expresion))
+						//{
+						//	MemoryStream stream = new MemoryStream();
+						//	StreamWriter writer = new StreamWriter(stream);
+						//	writer.Write(fieldExtractor.Expresion.EndsWith(";") ? fieldExtractor.Expresion : fieldExtractor.Expresion + ";");
+						//	writer.Flush();
 
-				IAfterExtractor afterExtractor = o as IAfterExtractor;
-				afterExtractor?.AfterProcess(page);
+						//	// convert stream to string  
+						//	stream.Position = 0;
+						//	AntlrInputStream input = new AntlrInputStream(stream);
+
+						//	ModifyScriptLexer lexer = new ModifyScriptLexer(input);
+						//	CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+						//	ModifyScriptVisitor modifyScriptVisitor = new ModifyScriptVisitor(value, fieldExtractor.Field);
+						//	ModifyScriptParser parser = new ModifyScriptParser(tokens);
+
+						//	modifyScriptVisitor.Visit(parser.stats());
+						//	value = modifyScriptVisitor.Value;
+						//	page.MissTargetUrls = modifyScriptVisitor.NeedStop;
+						//}
+
+						dynamic converted = Convert(value, fieldExtractor.ObjectFormatter);
+
+						if (converted == null && fieldExtractor.NotNull)
+						{
+							return null;
+						}
+
+						if (fieldExtractor.Stoper != null && !page.MissTargetUrls)
+						{
+							page.MissTargetUrls = fieldExtractor.Stoper.NeedStop(converted);
+						}
+
+						fieldExtractor.Field.SetValue(instance, converted);
+					}
+					else
+					{
+						fieldExtractor.Field.SetValue(instance, value);
+					}
+
+					if (fieldExtractor.Download)
+					{
+						// 不需要判断为空, 前面已经判断过了
+						if (UrlRegex.IsMatch(value))
+						{
+							page.PutField(Page.Images, value);
+						}
+					}
+				}
 			}
-			catch (Exception e)
-			{
-				Logger.Error("Extract fail", e);
-			}
-			return o;
+
+			IAfterExtractor afterExtractor = instance as IAfterExtractor;
+			afterExtractor?.AfterProcess(page);
+
+			return instance;
 		}
 
 		private dynamic Convert(string value, IObjectFormatter objectFormatter)

@@ -18,9 +18,14 @@ namespace Java2Dotnet.Spider.Core.Selector
 
 		public object GetValue(Page page)
 		{
-			if (_field == "url")
+			if (_field.ToLower() == "url")
 			{
 				return page.GetUrl().ToString();
+			}
+
+			if (_field.ToLower() == "targeturl")
+			{
+				return page.GetTargetUrl().Value;
 			}
 
 			return page.GetRequest().GetExtra(_field);

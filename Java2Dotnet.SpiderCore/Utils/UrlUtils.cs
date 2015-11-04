@@ -59,9 +59,9 @@ namespace Java2Dotnet.Spider.Core.Utils
 			return domain;
 		}
 
-		public static IList<Request> ConvertToRequests(IEnumerable<string> urls)
+		public static IList<Request> ConvertToRequests(IEnumerable<string> urls, int grade)
 		{
-			return urls.Select(url => new Request(url, null)).ToList();
+			return urls.Select(url => new Request(url, grade, null)).ToList();
 		}
 
 		public static IList<string> ConvertToUrls(IEnumerable<Request> requests)

@@ -91,8 +91,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DbSupport\BaseDataProvider.cs" />
-    <Compile Include="DbSupport\DapperDataProviderManager.cs" />
+    <Compile Include="DbSupport\DataProviderManager.cs" />
     <Compile Include="DbSupport\Dapper\Attributes\Deleted.cs" />
     <Compile Include="DbSupport\Dapper\Attributes\KeyProperty.cs" />
     <Compile Include="DbSupport\Dapper\Attributes\NonStored.cs" />
@@ -107,7 +106,6 @@
     <Compile Include="DbSupport\Dapper\PropertyMetadata.cs" />
     <Compile Include="DbSupport\Dapper\SqlMapperExtention.cs" />
     <Compile Include="DbSupport\DataSettings.cs" />
-    <Compile Include="DbSupport\DataSettingsManager.cs" />
     <Compile Include="DbSupport\DbProviderUtil.cs" />
     <Compile Include="DbSupport\IDataProvider.cs" />
     <Compile Include="DbSupport\IDataProviderManager.cs" />
@@ -117,6 +115,7 @@
     <Compile Include="Model\Attribute\ComboExtract.cs" />
     <Compile Include="Model\Attribute\ExtractBy.cs" />
     <Compile Include="Model\Attribute\HelpUrl.cs" />
+    <Compile Include="Model\Attribute\Download.cs" />
     <Compile Include="Model\Attribute\Stoper.cs" />
     <Compile Include="Model\Attribute\Table.cs" />
     <Compile Include="Model\BaseEntity.cs" />
@@ -128,7 +127,6 @@
     <Compile Include="Model\Formatter\PrefixFormatter.cs" />
     <Compile Include="Model\Formatter\RegexFormatter.cs" />
     <Compile Include="Model\Formatter\Types.cs" />
-    <Compile Include="Model\HasKey.cs" />
     <Compile Include="Monitor\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -139,6 +137,8 @@
     <Compile Include="Monitor\SpiderStatus.cs" />
     <Compile Include="Monitor\ISpiderStatus.cs" />
     <Compile Include="MultiPageModel.cs" />
+    <Compile Include="Pipeline\CollectorPageModelPipeline.cs" />
+    <Compile Include="Pipeline\ImagePipeline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scheduler\ISchedulerManager.cs" />
     <Compile Include="Scheduler\RedisSchedulerManager.cs" />
@@ -177,7 +177,7 @@
     <Compile Include="Pipeline\ModelPipeline.cs" />
     <Compile Include="Pipeline\PageModelCollectorPipeline.cs" />
     <Compile Include="Pipeline\ConsolePageModelPipeline.cs" />
-    <Compile Include="Pipeline\CollectorPageModelToDbPipeline.cs" />
+    <Compile Include="Pipeline\PageModelToDbPipeline.cs" />
     <Compile Include="Monitor\SpiderMonitor.cs" />
   </ItemGroup>
   <ItemGroup>

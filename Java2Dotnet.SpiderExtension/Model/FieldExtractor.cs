@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Reflection;
 using Java2Dotnet.Spider.Core.Selector;
 using Java2Dotnet.Spider.Extension.Model.Attribute;
@@ -23,5 +22,7 @@ namespace Java2Dotnet.Spider.Extension.Model
 		public IObjectFormatter ObjectFormatter { get; set; }
 
 		public Stoper Stoper { get; set; }
+
+		public bool Download { get; set; }
 	}
 }

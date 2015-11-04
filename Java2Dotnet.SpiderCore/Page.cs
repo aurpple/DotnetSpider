@@ -19,6 +19,7 @@ namespace Java2Dotnet.Spider.Core
 	/// </summary>
 	public class Page
 	{
+		public const string Images = "580c9065-0f44-47e9-94ea-b172d5a730c0";
 		private readonly Request _request;
 
 		private readonly ResultItems _resultItems = new ResultItems();
@@ -30,6 +31,8 @@ namespace Java2Dotnet.Spider.Core
 		private string _rawText;
 
 		private ISelectable _url;
+
+		private ISelectable _targetUrl;
 
 		private int _statusCode;
 
@@ -101,7 +104,7 @@ namespace Java2Dotnet.Spider.Core
 					continue;
 				}
 				string s1 = UrlUtils.CanonicalizeUrl(s, _url.ToString());
-				_targetRequests.Add(new Request(s1, _request?.Extras));
+				_targetRequests.Add(new Request(s1, _request.NextDeep(), _request?.Extras));
 			}
 		}
 
@@ -120,7 +123,7 @@ namespace Java2Dotnet.Spider.Core
 					continue;
 				}
 				string s1 = UrlUtils.CanonicalizeUrl(s, _url.ToString());
-				Request request = new Request(s1, _request?.Extras) { Priority = priority };
+				Request request = new Request(s1, _request.NextDeep(), _request?.Extras) { Priority = priority };
 				_targetRequests.Add(request);
 			}
 		}
@@ -139,7 +142,7 @@ namespace Java2Dotnet.Spider.Core
 			}
 
 			requestString = UrlUtils.CanonicalizeUrl(requestString, _url.ToString());
-			_targetRequests.Add(new Request(requestString, _request?.Extras));
+			_targetRequests.Add(new Request(requestString, _request.NextDeep(), _request?.Extras));
 		}
 
 		/// <summary>
@@ -160,9 +163,23 @@ namespace Java2Dotnet.Spider.Core
 			return _url;
 		}
 
+		/// <summary>
+		/// Get url of current page
+		/// </summary>
+		/// <returns></returns>
+		public ISelectable GetTargetUrl()
+		{
+			return _targetUrl;
+		}
+
 		public void SetUrl(ISelectable url)
 		{
 			_url = url;
+		}
+
+		public void SetTargetUrl(ISelectable url)
+		{
+			_targetUrl = url;
 		}
 
 		/// <summary>
@@ -216,7 +233,7 @@ namespace Java2Dotnet.Spider.Core
 			return this;
 		}
 
-		public  bool MissTargetUrls { get; set; }
+		public bool MissTargetUrls { get; set; }
 
 		public override string ToString()
 		{

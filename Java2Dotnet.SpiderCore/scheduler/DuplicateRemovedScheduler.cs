@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Java2Dotnet.Spider.Core.Scheduler.Component;
 using log4net;
 
@@ -8,12 +9,7 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 	/// </summary>
 	public abstract class DuplicateRemovedScheduler : IScheduler
 	{
-		protected static ILog Logger;
-
-		protected DuplicateRemovedScheduler()
-		{
-			Logger = LogManager.GetLogger(GetType());
-		}
+		protected static ILog Logger = LogManager.GetLogger(typeof(DuplicateRemovedScheduler));
 
 		protected IDuplicateRemover DuplicateRemover { get; set; } = new HashSetDuplicateRemover();
 
@@ -35,10 +31,16 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 			return null;
 		}
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		protected virtual void PushWhenNoDuplicate(Request request, ITask task)
 		{
 		}
 
+		/// <summary>
+		/// 用于如果URL执行失败, 重新添加回TargetUrls时因Hash而不能重新加入队列的问题
+		/// </summary>
+		/// <param name="request"></param>
+		/// <returns></returns>
 		private bool ShouldReserved(Request request)
 		{
 			var cycleTriedTimes = (int?)request.GetExtra(Request.CycleTriedTimes);

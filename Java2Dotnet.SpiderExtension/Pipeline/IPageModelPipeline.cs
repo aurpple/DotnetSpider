@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Java2Dotnet.Spider.Core;
 
 namespace Java2Dotnet.Spider.Extension.Pipeline
@@ -7,6 +9,6 @@ namespace Java2Dotnet.Spider.Extension.Pipeline
 	/// </summary>
 	public interface IPageModelPipeline
 	{
-		void Process(dynamic o, ITask task);
+		void Process(Dictionary<Type, List<dynamic>> data, ITask task);
 	}
 }

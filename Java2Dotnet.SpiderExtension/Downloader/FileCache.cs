@@ -18,10 +18,9 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 	{
 		private IDownloader _downloaderWhenFileMiss;
 		private readonly IPageProcessor _pageProcessor;
-		private readonly ILog _logger = LogManager.GetLogger(typeof(FileCache));
 
 		public FileCache(string startUrl, string urlPattern)
-			: this(startUrl, urlPattern, "/data/webmagic/temp/")
+			: this(startUrl, urlPattern, "/data/dotnetspider/temp/")
 		{
 		}
 
@@ -45,7 +44,7 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			Page page;
 			try
 			{
-				FileInfo file = GetFile(path + Encrypt.Md5Encrypt(request.Url));
+				FileInfo file = PrepareFile(path + Encrypt.Md5Encrypt(request.Url));
 
 				StreamReader bufferedReader = new StreamReader(file.OpenRead());
 				string line = bufferedReader.ReadLine();
@@ -61,11 +60,11 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			{
 				if (e.GetType().IsInstanceOfType(typeof(FileNotFoundException)))
 				{
-					_logger.Info("File not exist for url " + request.Url);
+					Logger.Info("File not exist for url " + request.Url);
 				}
 				else
 				{
-					_logger.Warn("File read error for url " + request.Url, e);
+					Logger.Warn("File read error for url " + request.Url, e);
 				}
 			}
 			page = DownloadWhenMiss(request, task);
@@ -108,7 +107,7 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			string path = BasePath + PathSeperator + task.Identify + PathSeperator;
 			try
 			{
-				FileInfo fileInfo = GetFile(path + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
+				FileInfo fileInfo = PrepareFile(path + Encrypt.Md5Encrypt(resultItems.Request.Url) + ".html");
 				using (StreamWriter writer = new StreamWriter(fileInfo.OpenWrite(), Encoding.UTF8))
 				{
 					writer.WriteLine("url:\t" + resultItems.Request.Url);
@@ -117,7 +116,7 @@ namespace Java2Dotnet.Spider.Extension.Downloader
 			}
 			catch (IOException e)
 			{
-				_logger.Warn("write file error", e);
+				Logger.Warn("write file error", e);
 			}
 		}
 
