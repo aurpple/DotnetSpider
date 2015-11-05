@@ -13,6 +13,7 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 
 		protected IDuplicateRemover DuplicateRemover { get; set; } = new HashSetDuplicateRemover();
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public void Push(Request request, ITask task)
 		{
 			if (!DuplicateRemover.IsDuplicate(request, task) || ShouldReserved(request))
@@ -26,6 +27,7 @@ namespace Java2Dotnet.Spider.Core.Scheduler
 		{
 		}
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public virtual Request Poll(ITask task)
 		{
 			return null;
