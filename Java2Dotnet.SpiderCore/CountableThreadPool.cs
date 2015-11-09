@@ -78,7 +78,7 @@ namespace Java2Dotnet.Spider.Core
 		public void Execute(Func<object, CancellationTokenSource, int> func, object obj)
 		{
 			// List中保留比最大线程数多5个
-			while (GetAliveAndWaitingThreadCount() > _maxTaskCount)
+			while (GetAliveAndWaitingThreadCount() >= _maxTaskCount)
 			{
 				Thread.Sleep(50);
 			}
@@ -101,7 +101,7 @@ namespace Java2Dotnet.Spider.Core
 		{
 			_end = true;
 
-			while (GetThreadAlive() > 0)
+			while (_tasks.Count > 0)
 			{
 				Thread.Sleep(1000);
 			}

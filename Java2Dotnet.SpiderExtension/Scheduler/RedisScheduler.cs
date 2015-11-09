@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Java2Dotnet.Spider.Core;
 using Java2Dotnet.Spider.Core.Scheduler;
@@ -77,6 +78,7 @@ namespace Java2Dotnet.Spider.Extension.Scheduler
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		protected override void PushWhenNoDuplicate(Request request, ITask task)
 		{
 			using (var redis = _pool.GetClient())
@@ -104,6 +106,7 @@ namespace Java2Dotnet.Spider.Extension.Scheduler
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public override Request Poll(ITask task)
 		{
 			using (var redis = _pool.GetClient())

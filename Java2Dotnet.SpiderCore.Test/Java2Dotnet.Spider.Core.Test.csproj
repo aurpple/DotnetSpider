@@ -75,6 +75,8 @@
     <Compile Include="Pipeline\FilePipelineTest.cs" />
     <Compile Include="ResultItemsTest.cs" />
     <Compile Include="Scheduler\BloomFilterDuplicateRemoverTest.cs" />
+    <Compile Include="Scheduler\HashSetDuplicateRemoverTestcase.cs" />
+    <Compile Include="Scheduler\QueueSchedulerTestcase.cs" />
     <Compile Include="Scripts\JavaScriptTest.cs" />
     <Compile Include="Selector\ExtractorsTest.cs" />
     <Compile Include="Selector\JsonPathSelectorTest.cs" />
