@@ -86,7 +86,6 @@
     <Compile Include="SpiderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SiteTest.cs" />
-    <Compile Include="ResultItemsCollectorsPipelineTest.cs" />
     <Compile Include="UrlUtils\UrlUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
